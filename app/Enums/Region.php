@@ -1,0 +1,10 @@
+<?php
+
+namespace App\Enums;
+
+enum Region: string
+{
+    case VALLEY_IV = 'valley_iv';
+    case JINLONG = 'jinlong';
+    case WULING = 'wuling';
+}
