@@ -1,10 +1,16 @@
 <?php
 
 use App\Enums\TagType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Tags\Tag;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 it('can list all tags', function () {
     $tag1 = Tag::create([

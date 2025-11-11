@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\GameVersion;
+use App\Enums\Status;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +20,18 @@ class BlueprintFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'creator_id' => User::factory(),
+            'code' => fake()->unique()->regexify('[A-Za-z0-9]{16}'),
+            'title' => fake()->sentence(),
+            'slug' => fake()->slug(),
+            'version' => GameVersion::CBT_3,
+            'description' => fake()->paragraph(),
+            'status' => Status::DRAFT,
+            'region' => null,
+            'buildings' => null,
+            'item_inputs' => null,
+            'item_outputs' => null,
+            'is_anonymous' => false,
         ];
     }
 }

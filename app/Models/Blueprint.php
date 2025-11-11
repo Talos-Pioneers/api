@@ -12,12 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Sluggable\HasSlug;
+use Spatie\Sluggable\SlugOptions;
 use Spatie\Tags\HasTags;
 
 class Blueprint extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\BlueprintFactory> */
-    use HasFactory, HasTags, HasUlids, InteractsWithMedia, SoftDeletes;
+    use HasFactory, HasSlug, HasTags, HasUlids, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'creator_id',
@@ -31,6 +33,7 @@ class Blueprint extends Model implements HasMedia
         'buildings',
         'item_inputs',
         'item_outputs',
+        'is_anonymous',
     ];
 
     protected function casts(): array
@@ -42,6 +45,7 @@ class Blueprint extends Model implements HasMedia
             'buildings' => 'array',
             'item_inputs' => 'array',
             'item_outputs' => 'array',
+            'is_anonymous' => 'boolean',
         ];
     }
 
@@ -53,5 +57,12 @@ class Blueprint extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('gallery');
+    }
+
+    public function getSlugOptions(): SlugOptions
+    {
+        return SlugOptions::create()
+            ->generateSlugsFrom('title')
+            ->saveSlugsTo('slug');
     }
 }
