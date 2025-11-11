@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
 class BlueprintController extends Controller
@@ -24,11 +25,16 @@ class BlueprintController extends Controller
             abort(403, 'You are not authorized to view any blueprints');
         }
 
-        return BlueprintResource::collection(Blueprint::query()
-            ->with(['creator', 'tags'])
-            ->where('status', Status::PUBLISHED)
-            ->latest()
-            ->get());
+        return BlueprintResource::collection(
+            QueryBuilder::for(Blueprint::class)
+                ->with(['creator', 'tags'])
+                ->where('status', Status::PUBLISHED)
+                ->allowedFilters(['title', 'region', 'version', 'is_anonymous'])
+                ->allowedSorts(['created_at', 'updated_at', 'title'])
+                ->defaultSort('created_at')
+                ->paginate(25)->appends(request()->query()
+                )
+        );
     }
 
     /**

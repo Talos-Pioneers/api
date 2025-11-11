@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class BlueprintCollectionController extends Controller
 {
@@ -25,11 +26,14 @@ class BlueprintCollectionController extends Controller
         }
 
         return BlueprintCollectionResource::collection(
-            BlueprintCollection::query()
+            QueryBuilder::for(BlueprintCollection::class)
                 ->with(['creator', 'blueprints'])
                 ->where('status', Status::PUBLISHED)
-                ->latest()
-                ->get()
+                ->allowedFilters(['title', 'is_anonymous'])
+                ->allowedSorts(['created_at', 'updated_at', 'title'])
+                ->defaultSort('created_at')
+                ->paginate(25)->appends(request()->query()
+                )
         );
     }
 
