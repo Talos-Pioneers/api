@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BlueprintCollectionController;
 use App\Http\Controllers\BlueprintController;
 use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
@@ -9,7 +10,12 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+Route::apiResource('tags', TagController::class)->only(['index']);
+Route::apiResource('blueprints', BlueprintController::class)->only(['index', 'show']);
+Route::apiResource('collections', BlueprintCollectionController::class)->only(['index', 'show']);
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('tags', TagController::class);
-    Route::apiResource('blueprints', BlueprintController::class);
+    Route::apiResource('tags', TagController::class)->except(['index']);
+    Route::apiResource('blueprints', BlueprintController::class)->except(['index', 'show']);
+    Route::apiResource('collections', BlueprintCollectionController::class)->except(['index', 'show']);
 });

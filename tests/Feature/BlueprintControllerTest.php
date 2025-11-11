@@ -447,12 +447,6 @@ it('generates slug from title when updating a blueprint', function () {
         ]);
 });
 
-it('requires authentication to access blueprints', function () {
-    $response = $this->actingAsGuest()->getJson('/api/blueprints');
-
-    $response->assertUnauthorized();
-});
-
 it('returns 404 when showing non-existent blueprint', function () {
     $response = $this->getJson('/api/blueprints/non-existent-id');
 

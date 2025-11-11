@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\Status;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,12 @@ class BlueprintCollectionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'creator_id' => User::factory(),
+            'title' => fake()->sentence(),
+            'slug' => fake()->slug(),
+            'description' => fake()->paragraph(),
+            'status' => Status::DRAFT,
+            'is_anonymous' => false,
         ];
     }
 }
