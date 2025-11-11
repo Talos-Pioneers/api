@@ -14,6 +14,8 @@ class BlueprintResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+
         return [
             'id' => $this->id,
             'code' => $this->code,
@@ -39,6 +41,9 @@ class BlueprintResource extends JsonResource
                 'url' => $media->getUrl(),
                 'name' => $media->name,
             ]),
+            'likes_count' => $this->whenCounted('likes') ?? $this->likes()->count(),
+            'copies_count' => $this->whenCounted('copies') ?? $this->copies()->count(),
+            'is_liked' => $user ? $this->isLikedBy($user) : false,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

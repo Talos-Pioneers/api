@@ -452,3 +452,222 @@ it('returns 404 when showing non-existent blueprint', function () {
 
     $response->assertNotFound();
 });
+
+it('can like a blueprint', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'liked' => true,
+            'likes_count' => 1,
+        ]);
+
+    $this->assertDatabaseHas('blueprint_likes', [
+        'user_id' => $this->user->id,
+        'blueprint_id' => $blueprint->id,
+    ]);
+});
+
+it('can unlike a blueprint', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $blueprint->likes()->attach($this->user->id);
+
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'liked' => false,
+            'likes_count' => 0,
+        ]);
+
+    $this->assertDatabaseMissing('blueprint_likes', [
+        'user_id' => $this->user->id,
+        'blueprint_id' => $blueprint->id,
+    ]);
+});
+
+it('can toggle like on a blueprint multiple times', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Like
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response->assertSuccessful()->assertJson(['liked' => true, 'likes_count' => 1]);
+
+    // Unlike
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response->assertSuccessful()->assertJson(['liked' => false, 'likes_count' => 0]);
+
+    // Like again
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response->assertSuccessful()->assertJson(['liked' => true, 'likes_count' => 1]);
+});
+
+it('includes likes_count and is_liked in blueprint response', function () {
+    $otherUser = User::factory()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $otherUser->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Like the blueprint
+    $blueprint->likes()->attach($this->user->id);
+
+    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'data' => [
+                'id' => $blueprint->id,
+                'likes_count' => 1,
+                'is_liked' => true,
+            ],
+        ]);
+});
+
+it('shows is_liked as false when user has not liked blueprint', function () {
+    $otherUser = User::factory()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $otherUser->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'data' => [
+                'id' => $blueprint->id,
+                'likes_count' => 0,
+                'is_liked' => false,
+            ],
+        ]);
+});
+
+it('can track a blueprint copy', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'message' => 'Copy tracked successfully',
+        ])
+        ->assertJsonStructure([
+            'copies_count',
+        ]);
+
+    $this->assertDatabaseHas('blueprint_copies', [
+        'user_id' => $this->user->id,
+        'blueprint_id' => $blueprint->id,
+    ]);
+});
+
+it('rate limits blueprint copy to once per day per user', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // First copy
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response->assertSuccessful();
+
+    // Second copy attempt within 24 hours
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response->assertStatus(429)
+        ->assertJson([
+            'message' => 'You have already copied this blueprint today. Please try again tomorrow.',
+        ]);
+});
+
+it('includes copies_count in blueprint response', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Create a copy
+    $blueprint->copies()->create([
+        'user_id' => $this->user->id,
+        'ip_address' => '127.0.0.1',
+        'copied_at' => now(),
+    ]);
+
+    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+
+    $response->assertSuccessful()
+        ->assertJson([
+            'data' => [
+                'id' => $blueprint->id,
+                'copies_count' => 1,
+            ],
+        ]);
+});
+
+it('includes likes_count and copies_count in blueprint list', function () {
+    $otherUser = User::factory()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $otherUser->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Add a like
+    $blueprint->likes()->attach($this->user->id);
+
+    // Add a copy
+    $blueprint->copies()->create([
+        'user_id' => $this->user->id,
+        'ip_address' => '127.0.0.1',
+        'copied_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/blueprints');
+
+    $response->assertSuccessful()
+        ->assertJsonFragment([
+            'id' => $blueprint->id,
+            'likes_count' => 1,
+            'copies_count' => 1,
+        ]);
+});
+
+it('cannot like a blueprint without authentication', function () {
+    $blueprint = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Remove authentication
+    $this->actingAsGuest();
+
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+
+    $response->assertUnauthorized();
+});
+
+it('cannot copy a blueprint without authentication', function () {
+    $blueprint = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    // Remove authentication
+    $this->actingAsGuest();
+
+    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+
+    $response->assertUnauthorized();
+});

@@ -17,5 +17,7 @@ Route::apiResource('collections', BlueprintCollectionController::class)->only(['
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tags', TagController::class)->except(['index']);
     Route::apiResource('blueprints', BlueprintController::class)->except(['index', 'show']);
+    Route::post('blueprints/{blueprint}/like', [BlueprintController::class, 'like']);
+    Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
     Route::apiResource('collections', BlueprintCollectionController::class)->except(['index', 'show']);
 });

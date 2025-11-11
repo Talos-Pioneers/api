@@ -7,10 +7,12 @@ use App\Http\Requests\StoreBlueprintRequest;
 use App\Http\Requests\UpdateBlueprintRequest;
 use App\Http\Resources\BlueprintResource;
 use App\Models\Blueprint;
+use App\Models\BlueprintCopy;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
@@ -28,6 +30,7 @@ class BlueprintController extends Controller
         return BlueprintResource::collection(
             QueryBuilder::for(Blueprint::class)
                 ->with(['creator', 'tags'])
+                ->withCount(['likes', 'copies'])
                 ->where('status', Status::PUBLISHED)
                 ->allowedFilters(['title', 'region', 'version', 'is_anonymous'])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
@@ -94,7 +97,7 @@ class BlueprintController extends Controller
             abort(403, 'You are not authorized to view this blueprint');
         }
 
-        return new BlueprintResource($blueprint->load(['creator', 'tags']));
+        return new BlueprintResource($blueprint->load(['creator', 'tags'])->loadCount(['likes', 'copies']));
     }
 
     /**
@@ -182,5 +185,81 @@ class BlueprintController extends Controller
         $blueprint->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Toggle like status for a blueprint.
+     */
+    public function like(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
+    {
+        if ($request->user()->cannot('view', $blueprint)) {
+            abort(403, 'You are not authorized to like this blueprint');
+        }
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $isLiked = $blueprint->isLikedBy($user);
+
+        if ($isLiked) {
+            $blueprint->likes()->detach($user->id);
+            $liked = false;
+        } else {
+            $blueprint->likes()->attach($user->id);
+            $liked = true;
+        }
+
+        $blueprint->refresh();
+
+        return response()->json([
+            'liked' => $liked,
+            'likes_count' => $blueprint->likes()->count(),
+        ]);
+    }
+
+    /**
+     * Track a blueprint copy with rate limiting.
+     */
+    public function copy(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
+    {
+        if ($request->user()->cannot('view', $blueprint)) {
+            abort(403, 'You are not authorized to copy this blueprint');
+        }
+
+        /** @var User|null $user */
+        $user = $request->user();
+        $ipAddress = $request->ip();
+
+        // Check rate limiting: once per day per user or per IP
+        $rateLimitKey = $user
+            ? "blueprint_copy:{$blueprint->id}:user:{$user->id}"
+            : "blueprint_copy:{$blueprint->id}:ip:{$ipAddress}";
+
+        $canCopy = RateLimiter::attempt(
+            $rateLimitKey,
+            1,
+            function () use ($blueprint, $user, $ipAddress) {
+                BlueprintCopy::create([
+                    'blueprint_id' => $blueprint->id,
+                    'user_id' => $user?->id,
+                    'ip_address' => $ipAddress,
+                    'copied_at' => now(),
+                ]);
+            },
+            86400 // 24 hours in seconds
+        );
+
+        if (! $canCopy) {
+            return response()->json([
+                'message' => 'You have already copied this blueprint today. Please try again tomorrow.',
+            ], 429);
+        }
+
+        $blueprint->refresh();
+
+        return response()->json([
+            'message' => 'Copy tracked successfully',
+            'copies_count' => $blueprint->copies()->count(),
+        ]);
     }
 }
