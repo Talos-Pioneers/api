@@ -4,12 +4,14 @@ use App\Enums\Status;
 use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->seed(RolePermissionSeeder::class);
+    $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
 });
 
@@ -323,7 +325,7 @@ it('can update collection to anonymous', function () {
 });
 
 it('cannot update collection from another user', function () {
-    $otherUser = User::factory()->create();
+    $otherUser = User::factory()->regularUser()->create();
 
     $collection = BlueprintCollection::factory()->create([
         'creator_id' => $otherUser->id,
@@ -334,6 +336,36 @@ it('cannot update collection from another user', function () {
     ]);
 
     $response->assertForbidden();
+});
+
+it('can update collection from another user as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($admin)->putJson("/api/collections/{$collection->id}", [
+        'title' => 'Updated by Admin',
+    ]);
+
+    $response->assertSuccessful();
+    $collection->refresh();
+    expect($collection->title)->toBe('Updated by Admin');
+});
+
+it('can update collection from another user as moderator', function () {
+    $moderator = User::factory()->moderator()->create();
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($moderator)->putJson("/api/collections/{$collection->id}", [
+        'title' => 'Updated by Moderator',
+    ]);
+
+    $response->assertSuccessful();
+    $collection->refresh();
+    expect($collection->title)->toBe('Updated by Moderator');
 });
 
 it('can delete own collection', function () {
@@ -351,7 +383,7 @@ it('can delete own collection', function () {
 });
 
 it('cannot delete collection from another user', function () {
-    $otherUser = User::factory()->create();
+    $otherUser = User::factory()->regularUser()->create();
 
     $collection = BlueprintCollection::factory()->create([
         'creator_id' => $otherUser->id,
@@ -360,6 +392,34 @@ it('cannot delete collection from another user', function () {
     $response = $this->deleteJson("/api/collections/{$collection->id}");
 
     $response->assertForbidden();
+});
+
+it('can delete collection from another user as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($admin)->deleteJson("/api/collections/{$collection->id}");
+
+    $response->assertNoContent();
+    $this->assertSoftDeleted('blueprint_collections', [
+        'id' => $collection->id,
+    ]);
+});
+
+it('can delete collection from another user as moderator', function () {
+    $moderator = User::factory()->moderator()->create();
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($moderator)->deleteJson("/api/collections/{$collection->id}");
+
+    $response->assertNoContent();
+    $this->assertSoftDeleted('blueprint_collections', [
+        'id' => $collection->id,
+    ]);
 });
 
 it('generates slug from title when creating a collection', function () {

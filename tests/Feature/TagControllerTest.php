@@ -2,13 +2,15 @@
 
 use App\Enums\TagType;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Tags\Tag;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->seed(RolePermissionSeeder::class);
+    $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
 });
 
@@ -43,7 +45,10 @@ it('can list all tags', function () {
         ]);
 });
 
-it('can create a tag', function () {
+it('can create a tag as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $response = $this->postJson('/api/tags', [
         'name' => 'manufacturing',
     ]);
@@ -70,7 +75,18 @@ it('can create a tag', function () {
     expect($tag->slug)->toBe('manufacturing');
 });
 
-it('can create a tag with a specific type', function () {
+it('cannot create a tag as regular user', function () {
+    $response = $this->postJson('/api/tags', [
+        'name' => 'manufacturing',
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('can create a tag with a specific type as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $response = $this->postJson('/api/tags', [
         'name' => 'custom-tag',
         'type' => TagType::BLUEPRINT_TAGS->value,
@@ -147,7 +163,10 @@ it('returns 404 when showing a non-existent tag', function () {
     $response->assertNotFound();
 });
 
-it('can update a tag name', function () {
+it('can update a tag name as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $tag = Tag::create([
         'name' => 'old-name',
         'slug' => 'old-name',
@@ -174,7 +193,24 @@ it('can update a tag name', function () {
     expect($tag->slug)->toBe('new-name');
 });
 
-it('can update a tag type', function () {
+it('cannot update a tag as regular user', function () {
+    $tag = Tag::create([
+        'name' => 'old-name',
+        'slug' => 'old-name',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $response = $this->putJson("/api/tags/{$tag->id}", [
+        'name' => 'new-name',
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('can update a tag type as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $tag = Tag::create([
         'name' => 'test-tag',
         'slug' => 'test-tag',
@@ -195,7 +231,10 @@ it('can update a tag type', function () {
         ]);
 });
 
-it('can update both name and type', function () {
+it('can update both name and type as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $tag = Tag::create([
         'name' => 'old-name',
         'slug' => 'old-name',
@@ -271,7 +310,10 @@ it('returns 404 when updating a non-existent tag', function () {
     $response->assertNotFound();
 });
 
-it('can delete a tag', function () {
+it('can delete a tag as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $tag = Tag::create([
         'name' => 'to-delete',
         'slug' => 'to-delete',
@@ -287,13 +329,28 @@ it('can delete a tag', function () {
     ]);
 });
 
+it('cannot delete a tag as regular user', function () {
+    $tag = Tag::create([
+        'name' => 'to-delete',
+        'slug' => 'to-delete',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $response = $this->deleteJson("/api/tags/{$tag->id}");
+
+    $response->assertForbidden();
+});
+
 it('returns 404 when deleting a non-existent tag', function () {
     $response = $this->deleteJson('/api/tags/999');
 
     $response->assertNotFound();
 });
 
-it('generates slug from name when creating a tag', function () {
+it('generates slug from name when creating a tag as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $response = $this->postJson('/api/tags', [
         'name' => 'Test Tag Name',
     ]);
@@ -307,7 +364,10 @@ it('generates slug from name when creating a tag', function () {
         ]);
 });
 
-it('generates slug from name when updating a tag', function () {
+it('generates slug from name when updating a tag as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
     $tag = Tag::create([
         'name' => 'old-name',
         'slug' => 'old-name',

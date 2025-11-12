@@ -3,6 +3,7 @@
 use App\Http\Controllers\BlueprintCollectionController;
 use App\Http\Controllers\BlueprintController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +21,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('blueprints/{blueprint}/like', [BlueprintController::class, 'like']);
     Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
     Route::apiResource('collections', BlueprintCollectionController::class)->except(['index', 'show']);
+    Route::post('users/{user}/upgrade-to-moderator', [UserController::class, 'upgradeToModerator']);
 });

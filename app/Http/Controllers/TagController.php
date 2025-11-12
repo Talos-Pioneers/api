@@ -6,6 +6,7 @@ use App\Enums\TagType;
 use App\Http\Requests\StoreTagRequest;
 use App\Http\Requests\UpdateTagRequest;
 use App\Http\Resources\TagResource;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Spatie\Tags\Tag;
 
@@ -28,6 +29,10 @@ class TagController extends Controller
      */
     public function store(StoreTagRequest $request): TagResource
     {
+        if ($request->user()->cannot('create', Tag::class)) {
+            abort(403, 'You are not authorized to create tags');
+        }
+
         $validated = $request->validated();
 
         $tag = Tag::create([
@@ -52,6 +57,10 @@ class TagController extends Controller
      */
     public function update(UpdateTagRequest $request, Tag $tag): TagResource
     {
+        if ($request->user()->cannot('update', $tag)) {
+            abort(403, 'You are not authorized to update this tag');
+        }
+
         $validated = $request->validated();
 
         if (isset($validated['name'])) {
@@ -71,8 +80,12 @@ class TagController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tag $tag): \Illuminate\Http\JsonResponse
+    public function destroy(Request $request, Tag $tag): \Illuminate\Http\JsonResponse
     {
+        if ($request->user()->cannot('delete', $tag)) {
+            abort(403, 'You are not authorized to delete this tag');
+        }
+
         $tag->delete();
 
         return response()->json(null, 204);

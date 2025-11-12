@@ -6,6 +6,7 @@ use App\Enums\Status;
 use App\Enums\TagType;
 use App\Models\Blueprint;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +16,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
-    $this->user = User::factory()->create();
+    $this->seed(RolePermissionSeeder::class);
+    $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
 });
 
@@ -372,7 +374,7 @@ it('can update blueprint to anonymous', function () {
 });
 
 it('cannot update blueprint from another user', function () {
-    $otherUser = User::factory()->create();
+    $otherUser = User::factory()->regularUser()->create();
 
     $blueprint = Blueprint::factory()->create([
         'creator_id' => $this->user->id,
@@ -383,6 +385,36 @@ it('cannot update blueprint from another user', function () {
     ]);
 
     $response->assertForbidden();
+});
+
+it('can update blueprint from another user as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($admin)->putJson("/api/blueprints/{$blueprint->id}", [
+        'title' => 'Updated by Admin',
+    ]);
+
+    $response->assertSuccessful();
+    $blueprint->refresh();
+    expect($blueprint->title)->toBe('Updated by Admin');
+});
+
+it('can update blueprint from another user as moderator', function () {
+    $moderator = User::factory()->moderator()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($moderator)->putJson("/api/blueprints/{$blueprint->id}", [
+        'title' => 'Updated by Moderator',
+    ]);
+
+    $response->assertSuccessful();
+    $blueprint->refresh();
+    expect($blueprint->title)->toBe('Updated by Moderator');
 });
 
 it('can delete own blueprint', function () {
@@ -400,7 +432,7 @@ it('can delete own blueprint', function () {
 });
 
 it('cannot delete blueprint from another user', function () {
-    $otherUser = User::factory()->create();
+    $otherUser = User::factory()->regularUser()->create();
 
     $blueprint = Blueprint::factory()->create([
         'creator_id' => $this->user->id,
@@ -409,6 +441,34 @@ it('cannot delete blueprint from another user', function () {
     $response = $this->actingAs($otherUser)->deleteJson("/api/blueprints/{$blueprint->id}");
 
     $response->assertForbidden();
+});
+
+it('can delete blueprint from another user as admin', function () {
+    $admin = User::factory()->admin()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($admin)->deleteJson("/api/blueprints/{$blueprint->id}");
+
+    $response->assertNoContent();
+    $this->assertSoftDeleted('blueprints', [
+        'id' => $blueprint->id,
+    ]);
+});
+
+it('can delete blueprint from another user as moderator', function () {
+    $moderator = User::factory()->moderator()->create();
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($moderator)->deleteJson("/api/blueprints/{$blueprint->id}");
+
+    $response->assertNoContent();
+    $this->assertSoftDeleted('blueprints', [
+        'id' => $blueprint->id,
+    ]);
 });
 
 it('generates slug from title when creating a blueprint', function () {

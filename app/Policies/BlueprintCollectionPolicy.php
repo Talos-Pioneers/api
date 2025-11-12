@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Permission;
 use App\Enums\Status;
 use App\Models\BlueprintCollection;
 use App\Models\User;
@@ -39,7 +40,8 @@ class BlueprintCollectionPolicy
      */
     public function update(User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $user->id === $blueprintCollection->creator_id;
+        return $user->id === $blueprintCollection->creator_id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS);
     }
 
     /**
@@ -47,7 +49,8 @@ class BlueprintCollectionPolicy
      */
     public function delete(User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $user->id === $blueprintCollection->creator_id;
+        return $user->id === $blueprintCollection->creator_id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS);
     }
 
     /**
@@ -55,7 +58,8 @@ class BlueprintCollectionPolicy
      */
     public function restore(User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $user->id === $blueprintCollection->creator_id;
+        return $user->id === $blueprintCollection->creator_id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS);
     }
 
     /**
@@ -63,6 +67,7 @@ class BlueprintCollectionPolicy
      */
     public function forceDelete(User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $user->id === $blueprintCollection->creator_id;
+        return $user->id === $blueprintCollection->creator_id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS);
     }
 }
