@@ -24,7 +24,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email', app()->environment() === 'production' ? 'indisposable' : null],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'locale' => ['nullable', Rule::enum(Locale::class)],
         ];

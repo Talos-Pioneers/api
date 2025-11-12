@@ -23,7 +23,9 @@ class RegisterController extends Controller
         ]);
 
         $magicLink = MagicLink::create(
-            new LoginAction($user)
+            new LoginAction($user),
+            4320,
+            1,
         );
 
         Mail::to($user->email)->send(new MagicLinkMail($magicLink->url, 'register'));
