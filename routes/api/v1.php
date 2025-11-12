@@ -1,16 +1,11 @@
 <?php
 
 use App\Http\Controllers\V1\Admin\UserController;
-use App\Http\Controllers\V1\Auth\LoginController;
 use App\Http\Controllers\V1\Auth\ProfileController;
-use App\Http\Controllers\V1\Auth\RegisterController;
 use App\Http\Controllers\V1\Blueprint\BlueprintCollectionController;
 use App\Http\Controllers\V1\Blueprint\BlueprintController;
 use App\Http\Controllers\V1\Blueprint\TagController;
 use Illuminate\Support\Facades\Route;
-
-Route::post('register', [RegisterController::class, 'store']);
-Route::post('login', [LoginController::class, 'store']);
 
 Route::apiResource('tags', TagController::class)->only(['index']);
 Route::apiResource('blueprints', BlueprintController::class)->only(['index', 'show']);

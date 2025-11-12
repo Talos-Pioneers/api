@@ -12,7 +12,7 @@ beforeEach(function () {
 });
 
 it('can register a new user', function () {
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'test@example.com',
         'username' => 'testuser',
     ]);
@@ -29,7 +29,7 @@ it('can register a new user', function () {
 });
 
 it('requires email for registration', function () {
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'username' => 'testuser',
     ]);
 
@@ -38,7 +38,7 @@ it('requires email for registration', function () {
 });
 
 it('requires username for registration', function () {
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'test@example.com',
     ]);
 
@@ -47,7 +47,7 @@ it('requires username for registration', function () {
 });
 
 it('requires valid email format', function () {
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'invalid-email',
         'username' => 'testuser',
     ]);
@@ -59,7 +59,7 @@ it('requires valid email format', function () {
 it('prevents duplicate email registration', function () {
     User::factory()->create(['email' => 'existing@example.com']);
 
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'existing@example.com',
         'username' => 'newuser',
     ]);
@@ -71,7 +71,7 @@ it('prevents duplicate email registration', function () {
 it('prevents duplicate username registration', function () {
     User::factory()->create(['username' => 'existinguser']);
 
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'new@example.com',
         'username' => 'existinguser',
     ]);
@@ -81,7 +81,7 @@ it('prevents duplicate username registration', function () {
 });
 
 it('sends magic link email to registered user', function () {
-    $this->postJson('/api/v1/register', [
+    $this->postJson('/register', [
         'email' => 'test@example.com',
         'username' => 'testuser',
     ]);
@@ -94,7 +94,7 @@ it('sends magic link email to registered user', function () {
 });
 
 it('defaults to english locale when not provided', function () {
-    $this->postJson('/api/v1/register', [
+    $this->postJson('/register', [
         'email' => 'test@example.com',
         'username' => 'testuser',
     ]);
@@ -104,7 +104,7 @@ it('defaults to english locale when not provided', function () {
 });
 
 it('uses provided locale when registering', function () {
-    $this->postJson('/api/v1/register', [
+    $this->postJson('/register', [
         'email' => 'test@example.com',
         'username' => 'testuser',
         'locale' => Locale::JAPANESE->value,
@@ -115,7 +115,7 @@ it('uses provided locale when registering', function () {
 });
 
 it('validates locale enum value', function () {
-    $response = $this->postJson('/api/v1/register', [
+    $response = $this->postJson('/register', [
         'email' => 'test@example.com',
         'username' => 'testuser',
         'locale' => 'invalid-locale',
