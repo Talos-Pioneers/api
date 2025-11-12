@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\ProviderController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('auth/{provider}/redirect', [ProviderController::class, 'redirect'])->name('auth.provider.redirect');
+Route::get('auth/{provider}/callback', [ProviderController::class, 'callback'])->name('auth.provider.callback');

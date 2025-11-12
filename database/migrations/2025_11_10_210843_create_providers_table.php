@@ -15,8 +15,11 @@ return new class extends Migration
         Schema::create('providers', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->string('provider_user_id')->nullable();
+            $table->string('provider');
+            $table->string('provider_user_id');
             $table->timestamps();
+
+            $table->unique(['provider', 'provider_user_id']);
         });
     }
 
