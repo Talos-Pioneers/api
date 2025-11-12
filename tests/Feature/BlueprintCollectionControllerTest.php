@@ -34,7 +34,7 @@ it('can list published collections', function () {
         'title' => 'Private Collection',
     ]);
 
-    $response = $this->getJson('/api/collections');
+    $response = $this->getJson('/api/v1/collections');
 
     $response->assertSuccessful()
         ->assertJsonCount(2, 'data')
@@ -54,7 +54,7 @@ it('can list published collections', function () {
 });
 
 it('can create a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'My Collection',
         'description' => 'A test collection',
         'status' => Status::DRAFT->value,
@@ -86,7 +86,7 @@ it('can create a collection with blueprints', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Collection with Blueprints',
         'blueprints' => [$blueprint1->id, $blueprint2->id],
     ]);
@@ -99,7 +99,7 @@ it('can create a collection with blueprints', function () {
 });
 
 it('can create a public collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Public Collection',
         'status' => Status::PUBLISHED->value,
     ]);
@@ -119,7 +119,7 @@ it('can create a public collection', function () {
 });
 
 it('can create an anonymous collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Anonymous Collection',
         'is_anonymous' => true,
     ]);
@@ -138,14 +138,14 @@ it('can create an anonymous collection', function () {
 });
 
 it('validates required fields when creating a collection', function () {
-    $response = $this->postJson('/api/collections', []);
+    $response = $this->postJson('/api/v1/collections', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['title']);
 });
 
 it('validates title is a string when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 123,
     ]);
 
@@ -154,7 +154,7 @@ it('validates title is a string when creating a collection', function () {
 });
 
 it('validates status is a valid enum when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Test Collection',
         'status' => 'invalid-status',
     ]);
@@ -164,7 +164,7 @@ it('validates status is a valid enum when creating a collection', function () {
 });
 
 it('validates blueprints exist when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Test Collection',
         'blueprints' => [999, 1000],
     ]);
@@ -181,7 +181,7 @@ it('can show a published collection', function () {
         'status' => Status::PUBLISHED,
     ]);
 
-    $response = $this->getJson("/api/collections/{$collection->id}");
+    $response = $this->getJson("/api/v1/collections/{$collection->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -198,7 +198,7 @@ it('can show own private collection', function () {
         'status' => Status::DRAFT,
     ]);
 
-    $response = $this->getJson("/api/collections/{$collection->id}");
+    $response = $this->getJson("/api/v1/collections/{$collection->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -217,7 +217,7 @@ it('cannot show private collection from another user', function () {
         'status' => Status::DRAFT,
     ]);
 
-    $response = $this->getJson("/api/collections/{$collection->id}");
+    $response = $this->getJson("/api/v1/collections/{$collection->id}");
 
     $response->assertForbidden();
 });
@@ -229,7 +229,7 @@ it('can update own collection', function () {
         'description' => 'Old Description',
     ]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'title' => 'New Title',
         'description' => 'New Description',
     ]);
@@ -269,7 +269,7 @@ it('can update collection blueprints', function () {
 
     $collection->blueprints()->sync([$blueprint1->id, $blueprint2->id]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'blueprints' => [$blueprint2->id, $blueprint3->id],
     ]);
 
@@ -287,7 +287,7 @@ it('can update collection to public', function () {
         'status' => Status::DRAFT,
     ]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'status' => Status::PUBLISHED->value,
     ]);
 
@@ -309,7 +309,7 @@ it('can update collection to anonymous', function () {
         'is_anonymous' => false,
     ]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'is_anonymous' => true,
     ]);
 
@@ -331,7 +331,7 @@ it('cannot update collection from another user', function () {
         'creator_id' => $otherUser->id,
     ]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'title' => 'Hacked Title',
     ]);
 
@@ -344,7 +344,7 @@ it('can update collection from another user as admin', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($admin)->putJson("/api/collections/{$collection->id}", [
+    $response = $this->actingAs($admin)->putJson("/api/v1/collections/{$collection->id}", [
         'title' => 'Updated by Admin',
     ]);
 
@@ -359,7 +359,7 @@ it('can update collection from another user as moderator', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($moderator)->putJson("/api/collections/{$collection->id}", [
+    $response = $this->actingAs($moderator)->putJson("/api/v1/collections/{$collection->id}", [
         'title' => 'Updated by Moderator',
     ]);
 
@@ -373,7 +373,7 @@ it('can delete own collection', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->deleteJson("/api/collections/{$collection->id}");
+    $response = $this->deleteJson("/api/v1/collections/{$collection->id}");
 
     $response->assertNoContent();
 
@@ -389,7 +389,7 @@ it('cannot delete collection from another user', function () {
         'creator_id' => $otherUser->id,
     ]);
 
-    $response = $this->deleteJson("/api/collections/{$collection->id}");
+    $response = $this->deleteJson("/api/v1/collections/{$collection->id}");
 
     $response->assertForbidden();
 });
@@ -400,7 +400,7 @@ it('can delete collection from another user as admin', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($admin)->deleteJson("/api/collections/{$collection->id}");
+    $response = $this->actingAs($admin)->deleteJson("/api/v1/collections/{$collection->id}");
 
     $response->assertNoContent();
     $this->assertSoftDeleted('blueprint_collections', [
@@ -414,7 +414,7 @@ it('can delete collection from another user as moderator', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($moderator)->deleteJson("/api/collections/{$collection->id}");
+    $response = $this->actingAs($moderator)->deleteJson("/api/v1/collections/{$collection->id}");
 
     $response->assertNoContent();
     $this->assertSoftDeleted('blueprint_collections', [
@@ -423,7 +423,7 @@ it('can delete collection from another user as moderator', function () {
 });
 
 it('generates slug from title when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'My Awesome Collection',
     ]);
 
@@ -443,7 +443,7 @@ it('generates slug from title when updating a collection', function () {
         'slug' => 'old-title',
     ]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'title' => 'Updated Collection Title',
     ]);
 
@@ -474,7 +474,7 @@ it('returns collection with blueprints when loaded', function () {
 
     $collection->blueprints()->sync([$blueprint1->id, $blueprint2->id]);
 
-    $response = $this->getJson("/api/collections/{$collection->id}");
+    $response = $this->getJson("/api/v1/collections/{$collection->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -495,7 +495,7 @@ it('returns collection with blueprints when loaded', function () {
 });
 
 it('can create collection without blueprints', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Empty Collection',
     ]);
 
@@ -516,7 +516,7 @@ it('can update collection to remove all blueprints', function () {
 
     $collection->blueprints()->sync([$blueprint1->id]);
 
-    $response = $this->putJson("/api/collections/{$collection->id}", [
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
         'blueprints' => [],
     ]);
 
@@ -527,7 +527,7 @@ it('can update collection to remove all blueprints', function () {
 });
 
 it('requires authentication to create collections', function () {
-    $response = $this->actingAsGuest()->postJson('/api/collections', [
+    $response = $this->actingAsGuest()->postJson('/api/v1/collections', [
         'title' => 'Test Collection',
     ]);
 
@@ -536,14 +536,14 @@ it('requires authentication to create collections', function () {
 
 it('returns 404 when showing non-existent collection', function () {
     // Note: This requires authentication, so we need to be authenticated
-    $response = $this->getJson('/api/collections/non-existent-id');
+    $response = $this->getJson('/api/v1/collections/non-existent-id');
 
     // The route binding will fail before authorization check
     $response->assertNotFound();
 });
 
 it('defaults to draft status when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Default Status Collection',
     ]);
 
@@ -561,7 +561,7 @@ it('defaults to draft status when creating a collection', function () {
 });
 
 it('defaults to not anonymous when creating a collection', function () {
-    $response = $this->postJson('/api/collections', [
+    $response = $this->postJson('/api/v1/collections', [
         'title' => 'Default Anonymous Collection',
     ]);
 

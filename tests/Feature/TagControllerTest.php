@@ -27,7 +27,7 @@ it('can list all tags', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->getJson('/api/tags');
+    $response = $this->getJson('/api/v1/tags');
 
     $response->assertSuccessful()
         ->assertJsonCount(2, 'data')
@@ -49,7 +49,7 @@ it('can create a tag as admin', function () {
     $admin = User::factory()->admin()->create();
     $this->actingAs($admin);
 
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 'manufacturing',
     ]);
 
@@ -76,7 +76,7 @@ it('can create a tag as admin', function () {
 });
 
 it('cannot create a tag as regular user', function () {
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 'manufacturing',
     ]);
 
@@ -87,7 +87,7 @@ it('can create a tag with a specific type as admin', function () {
     $admin = User::factory()->admin()->create();
     $this->actingAs($admin);
 
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 'custom-tag',
         'type' => TagType::BLUEPRINT_TAGS->value,
     ]);
@@ -103,14 +103,14 @@ it('can create a tag with a specific type as admin', function () {
 });
 
 it('validates name is required when creating a tag', function () {
-    $response = $this->postJson('/api/tags', []);
+    $response = $this->postJson('/api/v1/tags', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['name']);
 });
 
 it('validates name is a string when creating a tag', function () {
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 123,
     ]);
 
@@ -119,7 +119,7 @@ it('validates name is a string when creating a tag', function () {
 });
 
 it('validates name max length when creating a tag', function () {
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => str_repeat('a', 256),
     ]);
 
@@ -128,7 +128,7 @@ it('validates name max length when creating a tag', function () {
 });
 
 it('validates type is a valid enum when creating a tag', function () {
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 'test-tag',
         'type' => 'invalid-type',
     ]);
@@ -144,7 +144,7 @@ it('can show a single tag', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->getJson("/api/tags/{$tag->id}");
+    $response = $this->getJson("/api/v1/tags/{$tag->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -158,7 +158,7 @@ it('can show a single tag', function () {
 });
 
 it('returns 404 when showing a non-existent tag', function () {
-    $response = $this->getJson('/api/tags/999');
+    $response = $this->getJson('/api/v1/tags/999');
 
     $response->assertNotFound();
 });
@@ -173,7 +173,7 @@ it('can update a tag name as admin', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => 'new-name',
     ]);
 
@@ -200,7 +200,7 @@ it('cannot update a tag as regular user', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => 'new-name',
     ]);
 
@@ -217,7 +217,7 @@ it('can update a tag type as admin', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'type' => TagType::BLUEPRINT_TAGS->value,
     ]);
 
@@ -241,7 +241,7 @@ it('can update both name and type as admin', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => 'updated-name',
         'type' => TagType::BLUEPRINT_TAGS->value,
     ]);
@@ -264,7 +264,7 @@ it('validates name is a string when updating a tag', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => 123,
     ]);
 
@@ -279,7 +279,7 @@ it('validates name max length when updating a tag', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => str_repeat('a', 256),
     ]);
 
@@ -294,7 +294,7 @@ it('validates type is a valid enum when updating a tag', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'type' => 'invalid-type',
     ]);
 
@@ -303,7 +303,7 @@ it('validates type is a valid enum when updating a tag', function () {
 });
 
 it('returns 404 when updating a non-existent tag', function () {
-    $response = $this->putJson('/api/tags/999', [
+    $response = $this->putJson('/api/v1/tags/999', [
         'name' => 'updated-name',
     ]);
 
@@ -320,7 +320,7 @@ it('can delete a tag as admin', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->deleteJson("/api/tags/{$tag->id}");
+    $response = $this->deleteJson("/api/v1/tags/{$tag->id}");
 
     $response->assertNoContent();
 
@@ -336,13 +336,13 @@ it('cannot delete a tag as regular user', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->deleteJson("/api/tags/{$tag->id}");
+    $response = $this->deleteJson("/api/v1/tags/{$tag->id}");
 
     $response->assertForbidden();
 });
 
 it('returns 404 when deleting a non-existent tag', function () {
-    $response = $this->deleteJson('/api/tags/999');
+    $response = $this->deleteJson('/api/v1/tags/999');
 
     $response->assertNotFound();
 });
@@ -351,7 +351,7 @@ it('generates slug from name when creating a tag as admin', function () {
     $admin = User::factory()->admin()->create();
     $this->actingAs($admin);
 
-    $response = $this->postJson('/api/tags', [
+    $response = $this->postJson('/api/v1/tags', [
         'name' => 'Test Tag Name',
     ]);
 
@@ -374,7 +374,7 @@ it('generates slug from name when updating a tag as admin', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->putJson("/api/tags/{$tag->id}", [
+    $response = $this->putJson("/api/v1/tags/{$tag->id}", [
         'name' => 'Updated Tag Name',
     ]);
 

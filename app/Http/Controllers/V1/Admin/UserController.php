@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\V1\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\UpgradeUserToModeratorRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;

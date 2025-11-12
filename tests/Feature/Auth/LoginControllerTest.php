@@ -14,7 +14,7 @@ beforeEach(function () {
 it('can request login magic link', function () {
     $user = User::factory()->create(['email' => 'test@example.com']);
 
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'test@example.com',
     ]);
 
@@ -29,14 +29,14 @@ it('can request login magic link', function () {
 });
 
 it('requires email for login', function () {
-    $response = $this->postJson('/api/login', []);
+    $response = $this->postJson('/api/v1/login', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['email']);
 });
 
 it('requires valid email format for login', function () {
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'invalid-email',
     ]);
 
@@ -45,7 +45,7 @@ it('requires valid email format for login', function () {
 });
 
 it('requires existing email for login', function () {
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'nonexistent@example.com',
     ]);
 
@@ -56,7 +56,7 @@ it('requires existing email for login', function () {
 it('sends magic link email to user', function () {
     $user = User::factory()->create(['email' => 'test@example.com']);
 
-    $this->postJson('/api/login', [
+    $this->postJson('/api/v1/login', [
         'email' => 'test@example.com',
     ]);
 
@@ -66,7 +66,7 @@ it('sends magic link email to user', function () {
 });
 
 it('returns 404 for non-existent user email', function () {
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'nonexistent@example.com',
     ]);
 

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\V1\Blueprint;
 
 use App\Enums\Status;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintRequest;
 use App\Http\Requests\UpdateBlueprintRequest;
 use App\Http\Resources\BlueprintResource;

@@ -8,7 +8,7 @@ uses(RefreshDatabase::class);
 it('can view own profile', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->getJson('/api/profile');
+    $response = $this->actingAs($user)->getJson('/api/v1/profile');
 
     $response->assertSuccessful()
         ->assertJson([
@@ -21,7 +21,7 @@ it('can view own profile', function () {
 });
 
 it('requires authentication to view profile', function () {
-    $response = $this->getJson('/api/profile');
+    $response = $this->getJson('/api/v1/profile');
 
     $response->assertUnauthorized();
 });
@@ -29,7 +29,7 @@ it('requires authentication to view profile', function () {
 it('can update own username', function () {
     $user = User::factory()->create(['username' => 'oldusername']);
 
-    $response = $this->actingAs($user)->putJson('/api/profile', [
+    $response = $this->actingAs($user)->putJson('/api/v1/profile', [
         'username' => 'newusername',
     ]);
 
@@ -48,7 +48,7 @@ it('can update own username', function () {
 });
 
 it('requires authentication to update profile', function () {
-    $response = $this->putJson('/api/profile', [
+    $response = $this->putJson('/api/v1/profile', [
         'username' => 'newusername',
     ]);
 
@@ -58,7 +58,7 @@ it('requires authentication to update profile', function () {
 it('requires username to update profile', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->putJson('/api/profile', []);
+    $response = $this->actingAs($user)->putJson('/api/v1/profile', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['username']);
@@ -68,7 +68,7 @@ it('prevents duplicate username when updating profile', function () {
     $user1 = User::factory()->create(['username' => 'user1']);
     $user2 = User::factory()->create(['username' => 'user2']);
 
-    $response = $this->actingAs($user1)->putJson('/api/profile', [
+    $response = $this->actingAs($user1)->putJson('/api/v1/profile', [
         'username' => 'user2',
     ]);
 
@@ -79,7 +79,7 @@ it('prevents duplicate username when updating profile', function () {
 it('allows user to keep same username when updating profile', function () {
     $user = User::factory()->create(['username' => 'myusername']);
 
-    $response = $this->actingAs($user)->putJson('/api/profile', [
+    $response = $this->actingAs($user)->putJson('/api/v1/profile', [
         'username' => 'myusername',
     ]);
 
@@ -89,7 +89,7 @@ it('allows user to keep same username when updating profile', function () {
 it('validates username max length', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->putJson('/api/profile', [
+    $response = $this->actingAs($user)->putJson('/api/v1/profile', [
         'username' => str_repeat('a', 256),
     ]);
 

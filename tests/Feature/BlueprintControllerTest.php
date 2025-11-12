@@ -40,7 +40,7 @@ it('can list published blueprints', function () {
         'title' => 'Draft Blueprint',
     ]);
 
-    $response = $this->getJson('/api/blueprints');
+    $response = $this->getJson('/api/v1/blueprints');
 
     $response->assertSuccessful()
         ->assertJsonCount(2, 'data')
@@ -60,7 +60,7 @@ it('can list published blueprints', function () {
 });
 
 it('can create a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
         'version' => GameVersion::CBT_3->value,
@@ -109,7 +109,7 @@ it('can create a blueprint with tags', function () {
         'type' => TagType::BLUEPRINT_TAGS,
     ]);
 
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
         'version' => GameVersion::CBT_3->value,
@@ -127,7 +127,7 @@ it('can create a blueprint with gallery images', function () {
     $image1 = UploadedFile::fake()->image('blueprint1.jpg', 800, 600);
     $image2 = UploadedFile::fake()->image('blueprint2.jpg', 800, 600);
 
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
         'version' => GameVersion::CBT_3->value,
@@ -141,7 +141,7 @@ it('can create a blueprint with gallery images', function () {
 });
 
 it('can create an anonymous blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Anonymous Blueprint',
         'version' => GameVersion::CBT_3->value,
@@ -162,14 +162,14 @@ it('can create an anonymous blueprint', function () {
 });
 
 it('validates required fields when creating a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', []);
+    $response = $this->postJson('/api/v1/blueprints', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['code', 'title', 'version']);
 });
 
 it('validates code is a string when creating a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 123,
         'title' => 'Test',
         'version' => GameVersion::CBT_3->value,
@@ -180,7 +180,7 @@ it('validates code is a string when creating a blueprint', function () {
 });
 
 it('validates version is a valid enum when creating a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test',
         'version' => 'invalid-version',
@@ -191,7 +191,7 @@ it('validates version is a valid enum when creating a blueprint', function () {
 });
 
 it('validates tags exist when creating a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test',
         'version' => GameVersion::CBT_3->value,
@@ -205,7 +205,7 @@ it('validates tags exist when creating a blueprint', function () {
 it('validates gallery files are images when creating a blueprint', function () {
     $file = UploadedFile::fake()->create('document.pdf', 100);
 
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test',
         'version' => GameVersion::CBT_3->value,
@@ -224,7 +224,7 @@ it('can show a published blueprint', function () {
         'status' => Status::PUBLISHED,
     ]);
 
-    $response = $this->actingAs($otherUser)->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->actingAs($otherUser)->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -241,7 +241,7 @@ it('can show own draft blueprint', function () {
         'status' => Status::DRAFT,
     ]);
 
-    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -260,7 +260,7 @@ it('cannot show draft blueprint from another user', function () {
         'status' => Status::DRAFT,
     ]);
 
-    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertForbidden();
 });
@@ -272,7 +272,7 @@ it('can update own blueprint', function () {
         'code' => 'OLDCODE',
     ]);
 
-    $response = $this->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'New Title',
         'code' => 'NEWCODE',
     ]);
@@ -318,7 +318,7 @@ it('can update blueprint tags', function () {
 
     $blueprint->syncTags([$tag1, $tag2]);
 
-    $response = $this->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'tags' => [$tag2->id, $tag3->id],
     ]);
 
@@ -341,7 +341,7 @@ it('can update blueprint gallery', function () {
     $image2 = UploadedFile::fake()->image('image2.jpg');
     $image3 = UploadedFile::fake()->image('image3.jpg');
 
-    $response = $this->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'gallery' => [$image2, $image3],
     ]);
 
@@ -358,7 +358,7 @@ it('can update blueprint to anonymous', function () {
         'is_anonymous' => false,
     ]);
 
-    $response = $this->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'is_anonymous' => true,
     ]);
 
@@ -380,7 +380,7 @@ it('cannot update blueprint from another user', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($otherUser)->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->actingAs($otherUser)->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Hacked Title',
     ]);
 
@@ -393,7 +393,7 @@ it('can update blueprint from another user as admin', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($admin)->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->actingAs($admin)->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated by Admin',
     ]);
 
@@ -408,7 +408,7 @@ it('can update blueprint from another user as moderator', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($moderator)->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->actingAs($moderator)->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated by Moderator',
     ]);
 
@@ -422,7 +422,7 @@ it('can delete own blueprint', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->deleteJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->deleteJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertNoContent();
 
@@ -438,7 +438,7 @@ it('cannot delete blueprint from another user', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($otherUser)->deleteJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->actingAs($otherUser)->deleteJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertForbidden();
 });
@@ -449,7 +449,7 @@ it('can delete blueprint from another user as admin', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($admin)->deleteJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->actingAs($admin)->deleteJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertNoContent();
     $this->assertSoftDeleted('blueprints', [
@@ -463,7 +463,7 @@ it('can delete blueprint from another user as moderator', function () {
         'creator_id' => $this->user->id,
     ]);
 
-    $response = $this->actingAs($moderator)->deleteJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->actingAs($moderator)->deleteJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertNoContent();
     $this->assertSoftDeleted('blueprints', [
@@ -472,7 +472,7 @@ it('can delete blueprint from another user as moderator', function () {
 });
 
 it('generates slug from title when creating a blueprint', function () {
-    $response = $this->postJson('/api/blueprints', [
+    $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'My Awesome Blueprint',
         'version' => GameVersion::CBT_3->value,
@@ -494,7 +494,7 @@ it('generates slug from title when updating a blueprint', function () {
         'slug' => 'old-title',
     ]);
 
-    $response = $this->putJson("/api/blueprints/{$blueprint->id}", [
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated Blueprint Title',
     ]);
 
@@ -508,7 +508,7 @@ it('generates slug from title when updating a blueprint', function () {
 });
 
 it('returns 404 when showing non-existent blueprint', function () {
-    $response = $this->getJson('/api/blueprints/non-existent-id');
+    $response = $this->getJson('/api/v1/blueprints/non-existent-id');
 
     $response->assertNotFound();
 });
@@ -519,7 +519,7 @@ it('can like a blueprint', function () {
         'status' => Status::PUBLISHED,
     ]);
 
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -541,7 +541,7 @@ it('can unlike a blueprint', function () {
 
     $blueprint->likes()->attach($this->user->id);
 
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -562,15 +562,15 @@ it('can toggle like on a blueprint multiple times', function () {
     ]);
 
     // Like
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
     $response->assertSuccessful()->assertJson(['liked' => true, 'likes_count' => 1]);
 
     // Unlike
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
     $response->assertSuccessful()->assertJson(['liked' => false, 'likes_count' => 0]);
 
     // Like again
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
     $response->assertSuccessful()->assertJson(['liked' => true, 'likes_count' => 1]);
 });
 
@@ -584,7 +584,7 @@ it('includes likes_count and is_liked in blueprint response', function () {
     // Like the blueprint
     $blueprint->likes()->attach($this->user->id);
 
-    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -603,7 +603,7 @@ it('shows is_liked as false when user has not liked blueprint', function () {
         'status' => Status::PUBLISHED,
     ]);
 
-    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -621,7 +621,7 @@ it('can track a blueprint copy', function () {
         'status' => Status::PUBLISHED,
     ]);
 
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -644,11 +644,11 @@ it('rate limits blueprint copy to once per day per user', function () {
     ]);
 
     // First copy
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
     $response->assertSuccessful();
 
     // Second copy attempt within 24 hours
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
     $response->assertStatus(429)
         ->assertJson([
             'message' => 'You have already copied this blueprint today. Please try again tomorrow.',
@@ -668,7 +668,7 @@ it('includes copies_count in blueprint response', function () {
         'copied_at' => now(),
     ]);
 
-    $response = $this->getJson("/api/blueprints/{$blueprint->id}");
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -696,7 +696,7 @@ it('includes likes_count and copies_count in blueprint list', function () {
         'copied_at' => now(),
     ]);
 
-    $response = $this->getJson('/api/blueprints');
+    $response = $this->getJson('/api/v1/blueprints');
 
     $response->assertSuccessful()
         ->assertJsonFragment([
@@ -714,7 +714,7 @@ it('cannot like a blueprint without authentication', function () {
     // Remove authentication
     $this->actingAsGuest();
 
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/like");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/like");
 
     $response->assertUnauthorized();
 });
@@ -727,7 +727,7 @@ it('cannot copy a blueprint without authentication', function () {
     // Remove authentication
     $this->actingAsGuest();
 
-    $response = $this->postJson("/api/blueprints/{$blueprint->id}/copy");
+    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
 
     $response->assertUnauthorized();
 });
