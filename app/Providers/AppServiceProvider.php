@@ -38,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Comment::class, CommentPolicy::class);
 
         Event::listen(CommentAdded::class, AutoApproveComment::class);
+        Event::listen(function (\SocialiteProviders\Manager\SocialiteWasCalled $event) {
+            $event->extendSocialite('discord', \SocialiteProviders\Discord\Provider::class);
+        });
 
         Http::macro('warfarin', function () {
             return Http::baseUrl('https://api.warfarin.wiki/v1');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Auth;
 
+use App\Enums\AuthProvider;
 use App\Enums\Locale;
 use App\Http\Controllers\Controller;
 use App\Models\Provider;
@@ -15,7 +16,7 @@ class ProviderController extends Controller
 {
     public function redirect(string $provider): RedirectResponse
     {
-        if ($provider !== 'google') {
+        if (! in_array($provider, array_column(AuthProvider::cases(), 'value'))) {
             abort(404);
         }
 
@@ -24,7 +25,7 @@ class ProviderController extends Controller
 
     public function callback(string $provider): RedirectResponse
     {
-        if ($provider !== 'google') {
+        if (! in_array($provider, array_column(AuthProvider::cases(), 'value'))) {
             abort(404);
         }
 
@@ -36,7 +37,6 @@ class ProviderController extends Controller
                 ->first();
 
             if ($providerRecord) {
-                // User exists, log them in
                 Auth::login($providerRecord->user);
 
                 return redirect()->intended('/');
