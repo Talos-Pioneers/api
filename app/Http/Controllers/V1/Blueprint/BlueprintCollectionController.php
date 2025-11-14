@@ -14,7 +14,9 @@ use App\Services\AutoMod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BlueprintCollectionController extends Controller
@@ -28,7 +30,10 @@ class BlueprintCollectionController extends Controller
             QueryBuilder::for(BlueprintCollection::class)
                 ->with(['creator', 'blueprints'])
                 ->where('status', Status::PUBLISHED)
-                ->allowedFilters(['is_anonymous'])
+                ->allowedFilters([
+                    'is_anonymous',
+                    AllowedFilter::exact('creator_id'),
+                ])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')
                 ->paginate(25)->appends(request()->query()
@@ -89,9 +94,7 @@ class BlueprintCollectionController extends Controller
      */
     public function show(Request $request, BlueprintCollection $collection): BlueprintCollectionResource
     {
-        if ($request->user()->cannot('view', $collection)) {
-            abort(403, 'You are not authorized to view this collection');
-        }
+        Gate::authorize('view', $collection);
 
         return new BlueprintCollectionResource($collection->load(['creator', 'blueprints']));
     }
@@ -163,9 +166,7 @@ class BlueprintCollectionController extends Controller
      */
     public function destroy(Request $request, BlueprintCollection $collection): \Illuminate\Http\JsonResponse
     {
-        if ($request->user()->cannot('delete', $collection)) {
-            abort(403, 'You are not authorized to delete this collection');
-        }
+        Gate::authorize('delete', $collection);
 
         $collection->delete();
 

@@ -24,7 +24,9 @@ class BlueprintCollectionPolicy
      */
     public function view(User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $blueprintCollection->creator_id === $user->id || $blueprintCollection->status === Status::PUBLISHED;
+        return $blueprintCollection->creator_id === $user->id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS)
+            || $blueprintCollection->status === Status::PUBLISHED;
     }
 
     /**

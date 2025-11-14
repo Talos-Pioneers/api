@@ -22,7 +22,9 @@ class BlueprintPolicy
      */
     public function view(User $user, Blueprint $blueprint): bool
     {
-        return $blueprint->creator_id === $user->id || $blueprint->status === Status::PUBLISHED;
+        return $blueprint->creator_id === $user->id
+            || $user->hasPermissionTo(Permission::MANAGE_ALL_BLUEPRINTS)
+            || $blueprint->status === Status::PUBLISHED;
     }
 
     /**

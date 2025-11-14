@@ -14,6 +14,7 @@ use App\Services\AutoMod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -36,6 +37,7 @@ class BlueprintController extends Controller
                     'region',
                     'version',
                     'is_anonymous',
+                    AllowedFilter::exact('creator_id'),
                     'likes_count',
                     'copies_count',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
@@ -121,9 +123,7 @@ class BlueprintController extends Controller
      */
     public function show(Request $request, Blueprint $blueprint): BlueprintResource
     {
-        if ($request->user()->cannot('view', $blueprint)) {
-            abort(403, 'You are not authorized to view this blueprint');
-        }
+        Gate::authorize('view', $blueprint);
 
         return new BlueprintResource($blueprint->load(['creator', 'tags'])->loadCount(['likes', 'copies']));
     }
