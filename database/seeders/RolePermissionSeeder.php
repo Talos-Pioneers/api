@@ -29,12 +29,14 @@ class RolePermissionSeeder extends Seeder
             Permission::UPGRADE_USERS->value,
             Permission::MANAGE_ALL_BLUEPRINTS->value,
             Permission::MANAGE_ALL_COLLECTIONS->value,
+            Permission::MANAGE_COMMENTS->value,
         ]);
 
         $moderatorRole = Role::firstOrCreate(['name' => 'Moderator']);
         $moderatorRole->givePermissionTo([
             Permission::MANAGE_ALL_BLUEPRINTS->value,
             Permission::MANAGE_ALL_COLLECTIONS->value,
+            Permission::MANAGE_COMMENTS->value,
         ]);
 
         $userRole = Role::firstOrCreate(['name' => 'User']);

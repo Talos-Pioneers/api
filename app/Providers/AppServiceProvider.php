@@ -2,11 +2,16 @@
 
 namespace App\Providers;
 
+use App\Listeners\AutoApproveComment;
 use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
+use App\Models\Comment;
 use App\Policies\BlueprintCollectionPolicy;
 use App\Policies\BlueprintPolicy;
+use App\Policies\CommentPolicy;
 use App\Policies\TagPolicy;
+use BeyondCode\Comments\Events\CommentAdded;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Blueprint::class, BlueprintPolicy::class);
         Gate::policy(BlueprintCollection::class, BlueprintCollectionPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);
+        Gate::policy(Comment::class, CommentPolicy::class);
+
+        Event::listen(CommentAdded::class, AutoApproveComment::class);
 
         Http::macro('warfarin', function () {
             return Http::baseUrl('https://api.warfarin.wiki/v1');

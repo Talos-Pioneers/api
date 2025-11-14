@@ -8,4 +8,5 @@ enum Permission: string
     case UPGRADE_USERS = 'upgrade_users';
     case MANAGE_ALL_BLUEPRINTS = 'manage_all_blueprints';
     case MANAGE_ALL_COLLECTIONS = 'manage_all_collections';
+    case MANAGE_COMMENTS = 'manage_comments';
 }

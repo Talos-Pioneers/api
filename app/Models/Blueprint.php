@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GameVersion;
 use App\Enums\Region;
 use App\Enums\Status;
+use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +22,7 @@ use Spatie\Tags\HasTags;
 class Blueprint extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\BlueprintFactory> */
-    use HasFactory, HasSlug, HasTags, HasUlids, InteractsWithMedia, SoftDeletes;
+    use HasComments, HasFactory, HasSlug, HasTags, HasUlids, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'creator_id',
