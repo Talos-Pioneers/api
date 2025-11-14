@@ -41,4 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
+    'auto_mod' => [
+        'enabled' => env('AUTO_MOD_ENABLED', true),
+    ],
+
 ];

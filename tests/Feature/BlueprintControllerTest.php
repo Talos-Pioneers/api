@@ -9,6 +9,7 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Tags\Tag;
 
@@ -19,6 +20,8 @@ beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
     $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
+    Config::set('services.auto_mod.enabled', false);
+    Config::set('services.openai.api_key', 'test-key');
 });
 
 it('can list published blueprints', function () {
@@ -730,4 +733,274 @@ it('cannot copy a blueprint without authentication', function () {
     $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
 
     $response->assertUnauthorized();
+});
+
+it('rejects blueprint creation when title fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => true,
+                    'categories' => ['hate' => true],
+                    'category_scores' => ['hate' => 0.95],
+                ],
+            ],
+        ]),
+    ]);
+
+    // Mock OpenAI client in container
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Inappropriate Title',
+        'version' => GameVersion::CBT_3->value,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('rejects blueprint creation when description fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => true,
+                    'categories' => ['harassment' => true],
+                    'category_scores' => ['harassment' => 0.9],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Safe Title',
+        'description' => 'Inappropriate description content',
+        'version' => GameVersion::CBT_3->value,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('allows blueprint creation when content passes moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Safe Blueprint Title',
+        'description' => 'A safe and appropriate description',
+        'version' => GameVersion::CBT_3->value,
+    ]);
+
+    $response->assertSuccessful();
+});
+
+it('rejects blueprint update when title fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => true,
+                    'categories' => ['hate' => true],
+                    'category_scores' => ['hate' => 0.95],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'title' => 'Inappropriate Updated Title',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('allows blueprint update when content passes moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'title' => 'Safe Updated Title',
+    ]);
+
+    $response->assertSuccessful();
+});
+
+it('handles moderation api errors gracefully during creation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $response = new \GuzzleHttp\Psr7\Response(500, [], json_encode([
+        'error' => [
+            'message' => 'API error',
+            'type' => 'invalid_request_error',
+            'code' => null,
+        ],
+    ]));
+
+    $client = new \OpenAI\Testing\ClientFake([
+        new \OpenAI\Exceptions\ErrorException([
+            'message' => 'API error',
+            'type' => 'invalid_request_error',
+            'code' => null,
+        ], $response),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    // Should not fail, but log warning and allow creation
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test Title',
+        'version' => GameVersion::CBT_3->value,
+    ]);
+
+    // API errors should be logged but not block creation
+    $response->assertSuccessful();
+});
+
+it('rejects blueprint creation when image fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $image = UploadedFile::fake()->image('inappropriate.jpg');
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => true,
+                    'categories' => ['sexual' => true],
+                    'category_scores' => ['sexual' => 0.95],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Safe Title',
+        'description' => 'Safe description',
+        'version' => GameVersion::CBT_3->value,
+        'gallery' => [$image],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('allows blueprint creation when images pass moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $image1 = UploadedFile::fake()->image('safe1.jpg');
+    $image2 = UploadedFile::fake()->image('safe2.jpg');
+
+    // Title, description, image1, image2 = 4 results needed
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Safe Blueprint',
+        'description' => 'Safe description',
+        'version' => GameVersion::CBT_3->value,
+        'gallery' => [$image1, $image2],
+    ]);
+
+    $response->assertSuccessful();
 });

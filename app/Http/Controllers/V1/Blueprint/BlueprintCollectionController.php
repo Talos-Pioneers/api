@@ -10,9 +10,11 @@ use App\Http\Resources\BlueprintCollectionResource;
 use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
 use App\Models\User;
+use App\Services\AutoMod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BlueprintCollectionController extends Controller
@@ -40,6 +42,22 @@ class BlueprintCollectionController extends Controller
     public function store(StoreBlueprintCollectionRequest $request): BlueprintCollectionResource
     {
         $validated = $request->validated();
+
+        if (config('services.auto_mod.enabled')) {
+            $autoMod = AutoMod::build()
+                ->text($validated['title'] ?? null)
+                ->text($validated['description'] ?? null);
+
+            $moderationResult = $autoMod->validate();
+
+            if ($autoMod->fails()) {
+                throw ValidationException::withMessages([
+                    'moderation' => ['Content moderation failed. Please review your content.'],
+                    'flagged_texts' => $moderationResult['flagged_texts'],
+                    'flagged_images' => $moderationResult['flagged_images'],
+                ]);
+            }
+        }
 
         $collection = DB::transaction(function () use ($validated, $request) {
             /** @var User $user */
@@ -84,6 +102,29 @@ class BlueprintCollectionController extends Controller
     public function update(UpdateBlueprintCollectionRequest $request, BlueprintCollection $collection): BlueprintCollectionResource
     {
         $validated = $request->validated();
+
+        // Run content moderation on updated fields
+        if (config('services.auto_mod.enabled')) {
+            $autoMod = AutoMod::build();
+
+            if (isset($validated['title'])) {
+                $autoMod->text($validated['title']);
+            }
+
+            if (isset($validated['description'])) {
+                $autoMod->text($validated['description']);
+            }
+
+            $moderationResult = $autoMod->validate();
+
+            if ($autoMod->fails()) {
+                throw ValidationException::withMessages([
+                    'moderation' => ['Content moderation failed. Please review your content.'],
+                    'flagged_texts' => $moderationResult['flagged_texts'],
+                    'flagged_images' => $moderationResult['flagged_images'],
+                ]);
+            }
+        }
 
         $collection = DB::transaction(function () use ($collection, $validated) {
             if (isset($validated['title'])) {

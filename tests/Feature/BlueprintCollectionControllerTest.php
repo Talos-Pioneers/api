@@ -6,6 +6,7 @@ use App\Models\BlueprintCollection;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 
 uses(RefreshDatabase::class);
 
@@ -13,6 +14,8 @@ beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
     $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
+    Config::set('services.auto_mod.enabled', false);
+    Config::set('services.openai.api_key', 'test-key');
 });
 
 it('can list published collections', function () {
@@ -578,4 +581,177 @@ it('defaults to not anonymous when creating a collection', function () {
         'title' => 'Default Anonymous Collection',
         'is_anonymous' => false,
     ]);
+});
+
+it('rejects collection creation when title fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => true,
+                    'categories' => ['hate' => true],
+                    'category_scores' => ['hate' => 0.95],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/collections', [
+        'title' => 'Inappropriate Title',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('rejects collection creation when description fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => true,
+                    'categories' => ['harassment' => true],
+                    'category_scores' => ['harassment' => 0.9],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/collections', [
+        'title' => 'Safe Title',
+        'description' => 'Inappropriate description content',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('allows collection creation when content passes moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->postJson('/api/v1/collections', [
+        'title' => 'Safe Collection Title',
+        'description' => 'A safe and appropriate description',
+    ]);
+
+    $response->assertSuccessful();
+});
+
+it('rejects collection update when title fails moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => true,
+                    'categories' => ['hate' => true],
+                    'category_scores' => ['hate' => 0.95],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
+        'title' => 'Inappropriate Updated Title',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['moderation']);
+});
+
+it('allows collection update when content passes moderation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $collection = BlueprintCollection::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $client = new \OpenAI\Testing\ClientFake([
+        \OpenAI\Responses\Moderations\CreateResponse::fake([
+            'results' => [
+                [
+                    'flagged' => false,
+                    'categories' => [],
+                    'category_scores' => [],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    $response = $this->putJson("/api/v1/collections/{$collection->id}", [
+        'title' => 'Safe Updated Title',
+    ]);
+
+    $response->assertSuccessful();
+});
+
+it('handles moderation api errors gracefully during creation', function () {
+    Config::set('services.auto_mod.enabled', true);
+
+    $response = new \GuzzleHttp\Psr7\Response(500, [], json_encode([
+        'error' => [
+            'message' => 'API error',
+            'type' => 'invalid_request_error',
+            'code' => null,
+        ],
+    ]));
+
+    $client = new \OpenAI\Testing\ClientFake([
+        new \OpenAI\Exceptions\ErrorException([
+            'message' => 'API error',
+            'type' => 'invalid_request_error',
+            'code' => null,
+        ], $response),
+    ]);
+
+    $this->app->bind(\OpenAI\Client::class, fn () => $client);
+
+    // Should not fail, but log warning and allow creation
+    $response = $this->postJson('/api/v1/collections', [
+        'title' => 'Test Title',
+    ]);
+
+    // API errors should be logged but not block creation
+    $response->assertSuccessful();
 });

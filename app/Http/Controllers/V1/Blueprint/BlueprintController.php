@@ -10,10 +10,12 @@ use App\Http\Resources\BlueprintResource;
 use App\Models\Blueprint;
 use App\Models\BlueprintCopy;
 use App\Models\User;
+use App\Services\AutoMod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
@@ -51,6 +53,27 @@ class BlueprintController extends Controller
     public function store(StoreBlueprintRequest $request): BlueprintResource
     {
         $validated = $request->validated();
+
+        // Run content moderation
+        if (config('services.auto_mod.enabled')) {
+            $autoMod = AutoMod::build()
+                ->text($validated['title'] ?? null)
+                ->text($validated['description'] ?? null);
+
+            if ($request->hasFile('gallery')) {
+                $autoMod->images($request->file('gallery'));
+            }
+
+            $moderationResult = $autoMod->validate();
+
+            if ($autoMod->fails()) {
+                throw ValidationException::withMessages([
+                    'moderation' => ['Content moderation failed. Please review your content.'],
+                    'flagged_texts' => $moderationResult['flagged_texts'],
+                    'flagged_images' => $moderationResult['flagged_images'],
+                ]);
+            }
+        }
 
         $blueprint = DB::transaction(function () use ($validated, $request) {
             /** @var User $user */
@@ -111,6 +134,31 @@ class BlueprintController extends Controller
     public function update(UpdateBlueprintRequest $request, Blueprint $blueprint): BlueprintResource
     {
         $validated = $request->validated();
+
+        // Run content moderation on updated fields
+        $autoMod = AutoMod::build();
+
+        if (isset($validated['title'])) {
+            $autoMod->text($validated['title']);
+        }
+
+        if (isset($validated['description'])) {
+            $autoMod->text($validated['description']);
+        }
+
+        if ($request->hasFile('gallery')) {
+            $autoMod->images($request->file('gallery'));
+        }
+
+        $moderationResult = $autoMod->validate();
+
+        if ($autoMod->fails()) {
+            throw ValidationException::withMessages([
+                'moderation' => ['Content moderation failed. Please review your content.'],
+                'flagged_texts' => $moderationResult['flagged_texts'],
+                'flagged_images' => $moderationResult['flagged_images'],
+            ]);
+        }
 
         $blueprint = DB::transaction(function () use ($blueprint, $validated, $request) {
             if (isset($validated['title'])) {
