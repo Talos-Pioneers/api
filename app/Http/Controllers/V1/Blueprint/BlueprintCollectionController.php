@@ -22,15 +22,11 @@ class BlueprintCollectionController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        if ($request->user()->cannot('viewAny', BlueprintCollection::class)) {
-            abort(403, 'You are not authorized to view any collections');
-        }
-
         return BlueprintCollectionResource::collection(
             QueryBuilder::for(BlueprintCollection::class)
                 ->with(['creator', 'blueprints'])
                 ->where('status', Status::PUBLISHED)
-                ->allowedFilters(['title', 'is_anonymous'])
+                ->allowedFilters(['is_anonymous'])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')
                 ->paginate(25)->appends(request()->query()

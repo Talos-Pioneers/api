@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
@@ -24,20 +25,23 @@ class BlueprintController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        if ($request->user()->cannot('viewAny', Blueprint::class)) {
-            abort(403, 'You are not authorized to view any blueprints');
-        }
-
         return BlueprintResource::collection(
             QueryBuilder::for(Blueprint::class)
                 ->with(['creator', 'tags'])
                 ->withCount(['likes', 'copies'])
                 ->where('status', Status::PUBLISHED)
-                ->allowedFilters(['title', 'region', 'version', 'is_anonymous'])
+                ->allowedFilters([
+                    'region',
+                    'version',
+                    'is_anonymous',
+                    'likes_count',
+                    'copies_count',
+                    AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
+                ])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')
-                ->paginate(25)->appends(request()->query()
-                )
+                ->paginate(25)
+                ->appends(request()->query())
         );
     }
 
