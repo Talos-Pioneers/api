@@ -25,9 +25,24 @@ class BlueprintResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status->value,
             'region' => $this->region?->value,
-            'buildings' => $this->buildings,
-            'item_inputs' => $this->item_inputs,
-            'item_outputs' => $this->item_outputs,
+            'facilities' => $this->whenLoaded('facilities', fn () => $this->facilities->map(fn ($facility) => [
+                'id' => $facility->id,
+                'slug' => $facility->slug,
+                'name' => $facility->name,
+                'quantity' => $facility->pivot->quantity,
+            ])),
+            'item_inputs' => $this->whenLoaded('itemInputs', fn () => $this->itemInputs->map(fn ($item) => [
+                'id' => $item->id,
+                'slug' => $item->slug,
+                'name' => $item->name,
+                'quantity' => $item->pivot->quantity,
+            ])),
+            'item_outputs' => $this->whenLoaded('itemOutputs', fn () => $this->itemOutputs->map(fn ($item) => [
+                'id' => $item->id,
+                'slug' => $item->slug,
+                'name' => $item->name,
+                'quantity' => $item->pivot->quantity,
+            ])),
             'creator' => $this->is_anonymous ? null : [
                 'id' => $this->creator->id,
                 'name' => $this->creator->username,

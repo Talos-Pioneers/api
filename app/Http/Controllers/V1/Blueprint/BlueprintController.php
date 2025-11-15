@@ -30,7 +30,7 @@ class BlueprintController extends Controller
     {
         return BlueprintResource::collection(
             QueryBuilder::for(Blueprint::class)
-                ->with(['creator', 'tags'])
+                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
                 ->withCount(['likes', 'copies'])
                 ->where('status', Status::PUBLISHED)
                 ->allowedFilters([
@@ -38,6 +38,9 @@ class BlueprintController extends Controller
                     'version',
                     'is_anonymous',
                     AllowedFilter::scope('author_id', 'createdById'),
+                    AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
+                    AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
+                    AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
                     'likes_count',
                     'copies_count',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
@@ -90,11 +93,35 @@ class BlueprintController extends Controller
                 'description' => $validated['description'] ?? null,
                 'status' => $validated['status'] ?? \App\Enums\Status::DRAFT,
                 'region' => $validated['region'] ?? null,
-                'buildings' => $validated['buildings'] ?? null,
-                'item_inputs' => $validated['item_inputs'] ?? null,
-                'item_outputs' => $validated['item_outputs'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
             ]);
+
+            // Sync facilities if provided
+            if (isset($validated['facilities']) && is_array($validated['facilities'])) {
+                $facilitiesSync = [];
+                foreach ($validated['facilities'] as $facility) {
+                    $facilitiesSync[$facility['id']] = ['quantity' => $facility['quantity']];
+                }
+                $blueprint->facilities()->sync($facilitiesSync);
+            }
+
+            // Sync item inputs if provided
+            if (isset($validated['item_inputs']) && is_array($validated['item_inputs'])) {
+                $itemInputsSync = [];
+                foreach ($validated['item_inputs'] as $itemInput) {
+                    $itemInputsSync[$itemInput['id']] = ['quantity' => $itemInput['quantity']];
+                }
+                $blueprint->itemInputs()->sync($itemInputsSync);
+            }
+
+            // Sync item outputs if provided
+            if (isset($validated['item_outputs']) && is_array($validated['item_outputs'])) {
+                $itemOutputsSync = [];
+                foreach ($validated['item_outputs'] as $itemOutput) {
+                    $itemOutputsSync[$itemOutput['id']] = ['quantity' => $itemOutput['quantity']];
+                }
+                $blueprint->itemOutputs()->sync($itemOutputsSync);
+            }
 
             // Attach tags if provided
             if (isset($validated['tags']) && is_array($validated['tags'])) {
@@ -112,7 +139,7 @@ class BlueprintController extends Controller
                 }
             }
 
-            return $blueprint->load(['creator', 'tags']);
+            return $blueprint->load(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs']);
         });
 
         return new BlueprintResource($blueprint);
@@ -125,7 +152,7 @@ class BlueprintController extends Controller
     {
         Gate::authorize('view', $blueprint);
 
-        return new BlueprintResource($blueprint->load(['creator', 'tags'])->loadCount(['likes', 'copies']));
+        return new BlueprintResource($blueprint->load(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])->loadCount(['likes', 'copies']));
     }
 
     /**
@@ -186,23 +213,38 @@ class BlueprintController extends Controller
                 $blueprint->region = $validated['region'];
             }
 
-            if (isset($validated['buildings'])) {
-                $blueprint->buildings = $validated['buildings'];
-            }
-
-            if (isset($validated['item_inputs'])) {
-                $blueprint->item_inputs = $validated['item_inputs'];
-            }
-
-            if (isset($validated['item_outputs'])) {
-                $blueprint->item_outputs = $validated['item_outputs'];
-            }
-
             if (isset($validated['is_anonymous'])) {
                 $blueprint->is_anonymous = $validated['is_anonymous'];
             }
 
             $blueprint->save();
+
+            // Sync facilities if provided
+            if (isset($validated['facilities']) && is_array($validated['facilities'])) {
+                $facilitiesSync = [];
+                foreach ($validated['facilities'] as $facility) {
+                    $facilitiesSync[$facility['id']] = ['quantity' => $facility['quantity']];
+                }
+                $blueprint->facilities()->sync($facilitiesSync);
+            }
+
+            // Sync item inputs if provided
+            if (isset($validated['item_inputs']) && is_array($validated['item_inputs'])) {
+                $itemInputsSync = [];
+                foreach ($validated['item_inputs'] as $itemInput) {
+                    $itemInputsSync[$itemInput['id']] = ['quantity' => $itemInput['quantity']];
+                }
+                $blueprint->itemInputs()->sync($itemInputsSync);
+            }
+
+            // Sync item outputs if provided
+            if (isset($validated['item_outputs']) && is_array($validated['item_outputs'])) {
+                $itemOutputsSync = [];
+                foreach ($validated['item_outputs'] as $itemOutput) {
+                    $itemOutputsSync[$itemOutput['id']] = ['quantity' => $itemOutput['quantity']];
+                }
+                $blueprint->itemOutputs()->sync($itemOutputsSync);
+            }
 
             // Sync tags if provided
             if (isset($validated['tags']) && is_array($validated['tags'])) {
@@ -220,7 +262,7 @@ class BlueprintController extends Controller
                 }
             }
 
-            return $blueprint->load(['creator', 'tags']);
+            return $blueprint->load(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs']);
         });
 
         return new BlueprintResource($blueprint);

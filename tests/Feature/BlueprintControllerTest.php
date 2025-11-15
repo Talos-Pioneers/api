@@ -5,6 +5,8 @@ use App\Enums\Region;
 use App\Enums\Status;
 use App\Enums\TagType;
 use App\Models\Blueprint;
+use App\Models\Facility;
+use App\Models\Item;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,6 +65,13 @@ it('can list published blueprints', function () {
 });
 
 it('can create a blueprint', function () {
+    $facility1 = Facility::factory()->create(['slug' => 'building-1']);
+    $facility2 = Facility::factory()->create(['slug' => 'building-2']);
+    $itemInput1 = Item::factory()->create(['slug' => 'iron-ore']);
+    $itemInput2 = Item::factory()->create(['slug' => 'copper-ore']);
+    $itemOutput1 = Item::factory()->create(['slug' => 'iron-plate']);
+    $itemOutput2 = Item::factory()->create(['slug' => 'copper-plate']);
+
     $response = $this->postJson('/api/v1/blueprints', [
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
@@ -70,9 +79,18 @@ it('can create a blueprint', function () {
         'description' => 'A test blueprint',
         'status' => Status::DRAFT->value,
         'region' => Region::VALLEY_IV->value,
-        'buildings' => ['building-1', 'building-2'],
-        'item_inputs' => ['iron-ore', 'copper-ore'],
-        'item_outputs' => ['iron-plate', 'copper-plate'],
+        'facilities' => [
+            ['id' => $facility1->id, 'quantity' => 2],
+            ['id' => $facility2->id, 'quantity' => 1],
+        ],
+        'item_inputs' => [
+            ['id' => $itemInput1->id, 'quantity' => 10],
+            ['id' => $itemInput2->id, 'quantity' => 5],
+        ],
+        'item_outputs' => [
+            ['id' => $itemOutput1->id, 'quantity' => 8],
+            ['id' => $itemOutput2->id, 'quantity' => 4],
+        ],
     ]);
 
     $response->assertSuccessful()
@@ -85,11 +103,15 @@ it('can create a blueprint', function () {
                 'description' => 'A test blueprint',
                 'status' => Status::DRAFT->value,
                 'region' => Region::VALLEY_IV->value,
-                'buildings' => ['building-1', 'building-2'],
-                'item_inputs' => ['iron-ore', 'copper-ore'],
-                'item_outputs' => ['iron-plate', 'copper-plate'],
             ],
         ]);
+
+    $blueprint = Blueprint::where('code', 'EFE750a2A78o53Ela')->first();
+    expect($blueprint->facilities)->toHaveCount(2);
+    expect($blueprint->itemInputs)->toHaveCount(2);
+    expect($blueprint->itemOutputs)->toHaveCount(2);
+    expect($blueprint->facilities->firstWhere('id', $facility1->id)->pivot->quantity)->toBe(2);
+    expect($blueprint->itemInputs->firstWhere('id', $itemInput1->id)->pivot->quantity)->toBe(10);
 
     $this->assertDatabaseHas('blueprints', [
         'code' => 'EFE750a2A78o53Ela',
@@ -1310,4 +1332,159 @@ it('can list blueprints without authentication', function () {
     $response = $this->getJson('/api/v1/blueprints');
 
     $response->assertSuccessful();
+});
+
+it('can filter blueprints by facility slug', function () {
+    $facility1 = Facility::factory()->create(['slug' => 'mining-facility']);
+    $facility2 = Facility::factory()->create(['slug' => 'refining-facility']);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->facilities()->attach($facility1->id, ['quantity' => 2]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint2->facilities()->attach($facility2->id, ['quantity' => 1]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[facility]=mining-facility');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+        ])
+        ->assertJsonMissing([
+            'id' => $blueprint2->id,
+        ]);
+});
+
+it('can filter blueprints by item input slug', function () {
+    $item1 = Item::factory()->create(['slug' => 'iron-ore']);
+    $item2 = Item::factory()->create(['slug' => 'copper-ore']);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->itemInputs()->attach($item1->id, ['quantity' => 10]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint2->itemInputs()->attach($item2->id, ['quantity' => 5]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[item_input]=iron-ore');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+        ])
+        ->assertJsonMissing([
+            'id' => $blueprint2->id,
+        ]);
+});
+
+it('can filter blueprints by item output slug', function () {
+    $item1 = Item::factory()->create(['slug' => 'iron-plate']);
+    $item2 = Item::factory()->create(['slug' => 'copper-plate']);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->itemOutputs()->attach($item1->id, ['quantity' => 8]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint2->itemOutputs()->attach($item2->id, ['quantity' => 4]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[item_output]=iron-plate');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+        ])
+        ->assertJsonMissing([
+            'id' => $blueprint2->id,
+        ]);
+});
+
+it('validates facility id exists when creating a blueprint', function () {
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test',
+        'version' => GameVersion::CBT_3->value,
+        'facilities' => [
+            ['id' => 999, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['facilities.0.id']);
+});
+
+it('validates item input id exists when creating a blueprint', function () {
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test',
+        'version' => GameVersion::CBT_3->value,
+        'item_inputs' => [
+            ['id' => 999, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['item_inputs.0.id']);
+});
+
+it('validates item output id exists when creating a blueprint', function () {
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test',
+        'version' => GameVersion::CBT_3->value,
+        'item_outputs' => [
+            ['id' => 999, 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['item_outputs.0.id']);
+});
+
+it('validates quantity is positive when creating a blueprint', function () {
+    $facility = Facility::factory()->create();
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test',
+        'version' => GameVersion::CBT_3->value,
+        'facilities' => [
+            ['id' => $facility->id, 'quantity' => 0],
+        ],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['facilities.0.quantity']);
+});
+
+it('can filter blueprints by multiple facilities', function () {
+    $facility1 = Facility::factory()->create(['slug' => 'mining-facility']);
+    $facility2 = Facility::factory()->create(['slug' => 'refining-facility']);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->facilities()->attach($facility1->id, ['quantity' => 2]);
+    $blueprint1->facilities()->attach($facility2->id, ['quantity' => 1]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[facility]=mining-facility,refining-facility');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+        ]);
 });

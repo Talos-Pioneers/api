@@ -28,9 +28,6 @@ class BlueprintFactory extends Factory
             'description' => fake()->paragraph(),
             'status' => Status::DRAFT,
             'region' => null,
-            'buildings' => null,
-            'item_inputs' => null,
-            'item_outputs' => null,
             'is_anonymous' => false,
         ];
     }

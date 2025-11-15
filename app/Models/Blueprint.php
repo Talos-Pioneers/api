@@ -35,9 +35,6 @@ class Blueprint extends Model implements HasMedia
         'status',
         'region',
         'code',
-        'buildings',
-        'item_inputs',
-        'item_outputs',
         'is_anonymous',
     ];
 
@@ -47,9 +44,6 @@ class Blueprint extends Model implements HasMedia
             'status' => Status::class,
             'region' => Region::class,
             'version' => GameVersion::class,
-            'buildings' => 'array',
-            'item_inputs' => 'array',
-            'item_outputs' => 'array',
             'is_anonymous' => 'boolean',
         ];
     }
@@ -75,6 +69,27 @@ class Blueprint extends Model implements HasMedia
         return $this->hasMany(BlueprintCopy::class);
     }
 
+    public function facilities(): BelongsToMany
+    {
+        return $this->belongsToMany(Facility::class, 'blueprint_facilities')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function itemInputs(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class, 'blueprint_item_inputs')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function itemOutputs(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class, 'blueprint_item_outputs')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
     public function isLikedBy(?User $user): bool
     {
         if (! $user) {
@@ -93,6 +108,30 @@ class Blueprint extends Model implements HasMedia
     public function scopeCreatedById(Builder $query, string|int $id): Builder
     {
         return $query->where('creator_id', $id)->where('is_anonymous', false);
+    }
+
+    #[Scope]
+    public function withFacilitySlug(Builder $query, ...$slugs): Builder
+    {
+        return $query->whereHas('facilities', function ($q) use ($slugs) {
+            $q->whereIn('slug', $slugs);
+        });
+    }
+
+    #[Scope]
+    public function withItemInputSlug(Builder $query, ...$slugs): Builder
+    {
+        return $query->whereHas('itemInputs', function ($q) use ($slugs) {
+            $q->whereIn('slug', $slugs);
+        });
+    }
+
+    #[Scope]
+    public function withItemOutputSlug(Builder $query, ...$slugs): Builder
+    {
+        return $query->whereHas('itemOutputs', function ($q) use ($slugs) {
+            $q->whereIn('slug', $slugs);
+        });
     }
 
     public function registerMediaCollections(): void
