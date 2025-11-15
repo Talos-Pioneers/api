@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\FacilityType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 
 class Facility extends Model
 {
-    use HasTranslations;
+    /** @use HasFactory<\Database\Factories\FacilityFactory> */
+    use HasFactory, HasTranslations;
 
     public array $translatable = ['name', 'description'];
 
@@ -27,5 +29,13 @@ class Facility extends Model
             'range' => 'array',
             'type' => FacilityType::class,
         ];
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 }

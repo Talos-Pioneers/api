@@ -6,11 +6,15 @@ use App\Http\Controllers\V1\Blueprint\BlueprintCollectionController;
 use App\Http\Controllers\V1\Blueprint\BlueprintCommentController;
 use App\Http\Controllers\V1\Blueprint\BlueprintController;
 use App\Http\Controllers\V1\Blueprint\TagController;
+use App\Http\Controllers\V1\FacilityController;
+use App\Http\Controllers\V1\ItemController;
 use Illuminate\Support\Facades\Route;
 
 Route::apiResource('tags', TagController::class)->only(['index']);
 Route::apiResource('blueprints', BlueprintController::class)->only(['index', 'show']);
 Route::apiResource('collections', BlueprintCollectionController::class)->only(['index', 'show']);
+Route::apiResource('facilities', FacilityController::class)->only(['index', 'show']);
+Route::apiResource('items', ItemController::class)->only(['index', 'show']);
 
 // Comments routes (public read access)
 Route::get('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'index']);
