@@ -82,7 +82,7 @@ it('can show a single item', function () {
         'type' => ItemType::MATERIAL,
     ]);
 
-    $response = $this->getJson("/api/v1/items/{$item->slug}");
+    $response = $this->getJson("/api/v1/items/{$item->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -100,7 +100,7 @@ it('can show item by slug using route model binding', function () {
         'slug' => 'test-item',
     ]);
 
-    $response = $this->getJson("/api/v1/items/{$item->slug}");
+    $response = $this->getJson("/api/v1/items/{$item->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -123,7 +123,7 @@ it('includes translatable fields in response', function () {
     $item->setTranslation('description', Locale::ENGLISH->value, 'Test Description');
     $item->save();
 
-    $response = $this->getJson("/api/v1/items/{$item->slug}");
+    $response = $this->getJson("/api/v1/items/{$item->id}");
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -146,7 +146,7 @@ it('includes output_facility_craft_table in response', function () {
         ],
     ]);
 
-    $response = $this->getJson("/api/v1/items/{$item->slug}");
+    $response = $this->getJson("/api/v1/items/{$item->id}");
 
     $response->assertSuccessful()
         ->assertJson([
