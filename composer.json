@@ -23,7 +23,8 @@
         "spatie/laravel-permission": "^6.23",
         "spatie/laravel-query-builder": "^6.3",
         "spatie/laravel-sluggable": "^3.7",
-        "spatie/laravel-tags": "^4.10"
+        "spatie/laravel-tags": "^4.10",
+        "spatie/laravel-translatable": "^6.11"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
