@@ -5,6 +5,8 @@ use App\Http\Controllers\V1\Auth\ProfileController;
 use App\Http\Controllers\V1\Blueprint\BlueprintCollectionController;
 use App\Http\Controllers\V1\Blueprint\BlueprintCommentController;
 use App\Http\Controllers\V1\Blueprint\BlueprintController;
+use App\Http\Controllers\V1\Blueprint\MyBlueprintsController;
+use App\Http\Controllers\V1\Blueprint\MyCollectionsController;
 use App\Http\Controllers\V1\Blueprint\TagController;
 use App\Http\Controllers\V1\FacilityController;
 use App\Http\Controllers\V1\ItemController;
@@ -29,6 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
     Route::apiResource('collections', BlueprintCollectionController::class)->except(['index', 'show']);
     Route::post('users/{user}/upgrade-to-moderator', [UserController::class, 'upgradeToModerator']);
+
+    // My blueprints and collections routes
+    Route::get('my/blueprints', [MyBlueprintsController::class, 'index']);
+    Route::get('my/collections', [MyCollectionsController::class, 'index']);
 
     // Comments routes (authenticated write access)
     Route::post('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'store']);
