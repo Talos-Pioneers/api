@@ -32,7 +32,7 @@ class BlueprintCollectionController extends Controller
                 ->where('status', Status::PUBLISHED)
                 ->allowedFilters([
                     'is_anonymous',
-                    AllowedFilter::exact('creator_id'),
+                    AllowedFilter::scope('author_id', 'createdById'),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')

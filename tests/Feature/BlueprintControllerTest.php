@@ -1004,3 +1004,310 @@ it('allows blueprint creation when images pass moderation', function () {
 
     $response->assertSuccessful();
 });
+
+it('can filter blueprints by region', function () {
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'region' => Region::VALLEY_IV,
+    ]);
+
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'region' => Region::JINLONG,
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[region]='.Region::VALLEY_IV->value);
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'region' => Region::VALLEY_IV->value,
+        ]);
+});
+
+it('can filter blueprints by version', function () {
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'version' => GameVersion::CBT_3,
+    ]);
+
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'version' => GameVersion::CBT_3,
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[version]='.GameVersion::CBT_3->value);
+
+    $response->assertSuccessful()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment([
+            'version' => GameVersion::CBT_3->value,
+        ]);
+});
+
+it('can filter blueprints by is_anonymous', function () {
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => true,
+    ]);
+
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?filter[is_anonymous]=1');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'creator' => null,
+        ]);
+});
+
+it('can filter blueprints by author_id', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    $blueprint1 = Blueprint::factory()->create([
+        'creator_id' => $user1->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    Blueprint::factory()->create([
+        'creator_id' => $user2->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson("/api/v1/blueprints?filter[author_id]={$user1->id}");
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    // Should include the blueprint we created
+    $foundBlueprint = collect($data)->firstWhere('id', $blueprint1->id);
+    expect($foundBlueprint)->not->toBeNull();
+    expect($foundBlueprint['creator']['id'])->toBe($user1->id);
+});
+
+it('excludes anonymous blueprints when filtering by author_id', function () {
+    $user = User::factory()->create();
+
+    Blueprint::factory()->create([
+        'creator_id' => $user->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => true,
+    ]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'creator_id' => $user->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson("/api/v1/blueprints?filter[author_id]={$user->id}");
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    // Should include the non-anonymous blueprint we created
+    $foundBlueprint = collect($data)->firstWhere('id', $blueprint2->id);
+    expect($foundBlueprint)->not->toBeNull();
+    expect($foundBlueprint['creator']['id'])->toBe($user->id);
+
+    // Should not include the anonymous blueprint
+    $anonymousBlueprint = collect($data)->firstWhere('id', function ($id) use ($user) {
+        return Blueprint::where('id', $id)
+            ->where('creator_id', $user->id)
+            ->where('is_anonymous', true)
+            ->exists();
+    });
+    expect($anonymousBlueprint)->toBeNull();
+});
+
+it('can filter blueprints by tags', function () {
+    $tag1 = Tag::create([
+        'name' => 'mining',
+        'slug' => 'mining',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $tag2 = Tag::create([
+        'name' => 'refining',
+        'slug' => 'refining',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->syncTags([$tag1]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint2->syncTags([$tag2]);
+
+    $response = $this->getJson("/api/v1/blueprints?filter[tags.id]={$tag1->id}");
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+        ]);
+});
+
+it('can filter blueprints by multiple tags', function () {
+    $tag1 = Tag::create([
+        'name' => 'mining',
+        'slug' => 'mining',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $tag2 = Tag::create([
+        'name' => 'refining',
+        'slug' => 'refining',
+        'type' => TagType::BLUEPRINT_TAGS,
+    ]);
+
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint1->syncTags([$tag1, $tag2]);
+
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+    ]);
+    $blueprint2->syncTags([$tag1]);
+
+    $response = $this->getJson("/api/v1/blueprints?filter[tags.id]={$tag1->id},{$tag2->id}");
+
+    $response->assertSuccessful()
+        ->assertJsonCount(2, 'data');
+});
+
+it('can sort blueprints by title', function () {
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'Z Blueprint',
+    ]);
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'A Blueprint',
+    ]);
+    Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'M Blueprint',
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?sort=title');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['title'])->toBe('A Blueprint');
+    expect($data[1]['title'])->toBe('M Blueprint');
+    expect($data[2]['title'])->toBe('Z Blueprint');
+});
+
+it('can sort blueprints by created_at', function () {
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(2),
+    ]);
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(1),
+    ]);
+    $blueprint3 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?sort=created_at');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($blueprint1->id);
+    expect($data[1]['id'])->toBe($blueprint2->id);
+    expect($data[2]['id'])->toBe($blueprint3->id);
+});
+
+it('can sort blueprints by updated_at', function () {
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now()->subDays(2),
+    ]);
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now()->subDays(1),
+    ]);
+    $blueprint3 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints?sort=updated_at');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($blueprint1->id);
+    expect($data[1]['id'])->toBe($blueprint2->id);
+    expect($data[2]['id'])->toBe($blueprint3->id);
+});
+
+it('defaults to sorting by created_at', function () {
+    $blueprint1 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(2),
+    ]);
+    $blueprint2 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(1),
+    ]);
+    $blueprint3 = Blueprint::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($blueprint1->id);
+    expect($data[1]['id'])->toBe($blueprint2->id);
+    expect($data[2]['id'])->toBe($blueprint3->id);
+});
+
+it('paginates blueprint results', function () {
+    Blueprint::factory()->count(30)->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $response = $this->getJson('/api/v1/blueprints');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(25, 'data')
+        ->assertJsonStructure([
+            'data',
+            'links',
+            'meta',
+        ]);
+});
+
+it('can list blueprints without authentication', function () {
+    Blueprint::factory()->count(3)->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $this->actingAsGuest();
+
+    $response = $this->getJson('/api/v1/blueprints');
+
+    $response->assertSuccessful();
+});

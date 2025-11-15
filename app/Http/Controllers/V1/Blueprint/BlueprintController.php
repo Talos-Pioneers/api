@@ -37,7 +37,7 @@ class BlueprintController extends Controller
                     'region',
                     'version',
                     'is_anonymous',
-                    AllowedFilter::exact('creator_id'),
+                    AllowedFilter::scope('author_id', 'createdById'),
                     'likes_count',
                     'copies_count',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),

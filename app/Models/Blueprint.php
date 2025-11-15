@@ -6,6 +6,8 @@ use App\Enums\GameVersion;
 use App\Enums\Region;
 use App\Enums\Status;
 use BeyondCode\Comments\Traits\HasComments;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -85,6 +87,12 @@ class Blueprint extends Model implements HasMedia
         }
 
         return $this->likes()->where('user_id', $user->id)->exists();
+    }
+
+    #[Scope]
+    public function scopeCreatedById(Builder $query, string|int $id): Builder
+    {
+        return $query->where('creator_id', $id)->where('is_anonymous', false);
     }
 
     public function registerMediaCollections(): void

@@ -755,3 +755,204 @@ it('handles moderation api errors gracefully during creation', function () {
     // API errors should be logged but not block creation
     $response->assertSuccessful();
 });
+
+it('can filter collections by is_anonymous', function () {
+    BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => true,
+    ]);
+
+    BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson('/api/v1/collections?filter[is_anonymous]=1');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'creator' => null,
+        ]);
+});
+
+it('can filter collections by author_id', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    $collection1 = BlueprintCollection::factory()->create([
+        'creator_id' => $user1->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    BlueprintCollection::factory()->create([
+        'creator_id' => $user2->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson("/api/v1/collections?filter[author_id]={$user1->id}");
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    // Should include the collection we created
+    $foundCollection = collect($data)->firstWhere('id', $collection1->id);
+    expect($foundCollection)->not->toBeNull();
+    expect($foundCollection['creator']['id'])->toBe($user1->id);
+});
+
+it('excludes anonymous collections when filtering by author_id', function () {
+    $user = User::factory()->create();
+
+    $anonymousCollection = BlueprintCollection::factory()->create([
+        'creator_id' => $user->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => true,
+    ]);
+
+    $collection2 = BlueprintCollection::factory()->create([
+        'creator_id' => $user->id,
+        'status' => Status::PUBLISHED,
+        'is_anonymous' => false,
+    ]);
+
+    $response = $this->getJson("/api/v1/collections?filter[author_id]={$user->id}");
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    // Should include the non-anonymous collection we created
+    $foundCollection = collect($data)->firstWhere('id', $collection2->id);
+    expect($foundCollection)->not->toBeNull();
+    expect($foundCollection['creator']['id'])->toBe($user->id);
+
+    // Should not include the anonymous collection we created
+    $foundAnonymous = collect($data)->firstWhere('id', $anonymousCollection->id);
+    expect($foundAnonymous)->toBeNull();
+});
+
+it('can sort collections by title', function () {
+    BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'Z Collection',
+    ]);
+    BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'A Collection',
+    ]);
+    BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'title' => 'M Collection',
+    ]);
+
+    $response = $this->getJson('/api/v1/collections?sort=title');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['title'])->toBe('A Collection');
+    expect($data[1]['title'])->toBe('M Collection');
+    expect($data[2]['title'])->toBe('Z Collection');
+});
+
+it('can sort collections by created_at', function () {
+    $collection1 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(2),
+    ]);
+    $collection2 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(1),
+    ]);
+    $collection3 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/collections?sort=created_at');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($collection1->id);
+    expect($data[1]['id'])->toBe($collection2->id);
+    expect($data[2]['id'])->toBe($collection3->id);
+});
+
+it('can sort collections by updated_at', function () {
+    $collection1 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now()->subDays(2),
+    ]);
+    $collection2 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now()->subDays(1),
+    ]);
+    $collection3 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'updated_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/collections?sort=updated_at');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($collection1->id);
+    expect($data[1]['id'])->toBe($collection2->id);
+    expect($data[2]['id'])->toBe($collection3->id);
+});
+
+it('defaults to sorting by created_at', function () {
+    $collection1 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(2),
+    ]);
+    $collection2 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now()->subDays(1),
+    ]);
+    $collection3 = BlueprintCollection::factory()->create([
+        'status' => Status::PUBLISHED,
+        'created_at' => now(),
+    ]);
+
+    $response = $this->getJson('/api/v1/collections');
+
+    $response->assertSuccessful();
+    $data = $response->json('data');
+
+    expect($data[0]['id'])->toBe($collection1->id);
+    expect($data[1]['id'])->toBe($collection2->id);
+    expect($data[2]['id'])->toBe($collection3->id);
+});
+
+it('paginates collection results', function () {
+    BlueprintCollection::factory()->count(30)->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $response = $this->getJson('/api/v1/collections');
+
+    $response->assertSuccessful()
+        ->assertJsonCount(25, 'data')
+        ->assertJsonStructure([
+            'data',
+            'links',
+            'meta',
+        ]);
+});
+
+it('can list collections without authentication', function () {
+    BlueprintCollection::factory()->count(3)->create([
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $this->actingAsGuest();
+
+    $response = $this->getJson('/api/v1/collections');
+
+    $response->assertSuccessful();
+});
