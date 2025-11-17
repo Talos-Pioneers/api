@@ -13,7 +13,7 @@ enum ItemType: string
     case SANITY_MEDS = 'sanity_meds';
     case GIFTS = 'gifts';
     case SEEDS = 'seeds';
-    case OPERATIONAL_EXP = 'operational_exp';
+    case OPERATIONAL_EXP = 'operational_e_x_p';
     case WEAPON_MATERIAL = 'weapon_material';
     case SANITY = 'sanity';
     case CRATE = 'crate';
@@ -22,6 +22,7 @@ enum ItemType: string
     case OUTPOST_PROSPERITY = 'outpost_prosperity';
     case CONSUMABLES = 'consumables';
     case CRYSTAL = 'crystal';
+    case EMPLOYMENT_CONTRACT = 'employment_contract';
 
     public function displayName(): string
     {
@@ -44,6 +45,7 @@ enum ItemType: string
             self::OUTPOST_PROSPERITY => 'Outpost Prosperity',
             self::CONSUMABLES => 'Consumables',
             self::CRYSTAL => 'Crystal',
+            self::EMPLOYMENT_CONTRACT => 'Employment Contract',
             default => 'Unknown',
         };
     }

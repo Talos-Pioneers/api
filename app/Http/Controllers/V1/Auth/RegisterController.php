@@ -22,8 +22,12 @@ class RegisterController extends Controller
             'locale' => $request->validated('locale') ?? Locale::ENGLISH,
         ]);
 
+        $action = new LoginAction($user);
+        $action->remember();
+        $action->redirect(redirect()->away(config('app.frontend_url')));
+
         $magicLink = MagicLink::create(
-            new LoginAction($user),
+            $action,
             4320,
             1,
         );

@@ -12,10 +12,10 @@ beforeEach(function () {
 });
 
 it('can request login magic link', function () {
-    $user = User::factory()->create(['email' => 'test@example.com']);
+    $user = User::factory()->create(['email' => 'test@gmail.com']);
 
     $response = $this->postJson('/login', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
     ]);
 
     $response->assertSuccessful()
@@ -46,7 +46,7 @@ it('requires valid email format for login', function () {
 
 it('requires existing email for login', function () {
     $response = $this->postJson('/login', [
-        'email' => 'nonexistent@example.com',
+        'email' => 'nonexistent@gmail.com',
     ]);
 
     $response->assertUnprocessable()
@@ -54,10 +54,10 @@ it('requires existing email for login', function () {
 });
 
 it('sends magic link email to user', function () {
-    $user = User::factory()->create(['email' => 'test@example.com']);
+    $user = User::factory()->create(['email' => 'test@gmail.com']);
 
     $this->postJson('/login', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
     ]);
 
     Mail::assertSent(MagicLinkMail::class, function ($mail) use ($user) {
@@ -67,7 +67,7 @@ it('sends magic link email to user', function () {
 
 it('returns 404 for non-existent user email', function () {
     $response = $this->postJson('/login', [
-        'email' => 'nonexistent@example.com',
+        'email' => 'nonexistent@gmail.com',
     ]);
 
     $response->assertUnprocessable();

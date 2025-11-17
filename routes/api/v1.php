@@ -10,6 +10,7 @@ use App\Http\Controllers\V1\Blueprint\MyCollectionsController;
 use App\Http\Controllers\V1\Blueprint\TagController;
 use App\Http\Controllers\V1\FacilityController;
 use App\Http\Controllers\V1\ItemController;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::apiResource('tags', TagController::class)->only(['index']);
@@ -22,7 +23,7 @@ Route::apiResource('items', ItemController::class)->only(['index', 'show']);
 Route::get('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'index']);
 Route::get('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'show']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', HandlePrecognitiveRequests::class])->group(function () {
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
     Route::apiResource('tags', TagController::class)->except(['index']);

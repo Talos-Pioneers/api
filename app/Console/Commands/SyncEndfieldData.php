@@ -33,7 +33,7 @@ class SyncEndfieldData extends Command
     public function handle(): void
     {
         $localeStrings = ['en', 'cn', 'jp', 'kr', 'tc'];
-        $resources = ['facilities', 'items'];
+        $resources = ['items'];
 
         foreach ($localeStrings as $localeString) {
             $locale = Locale::fromString($localeString);
@@ -134,7 +134,7 @@ class SyncEndfieldData extends Command
         $summary = $showData['summary'] ?? [];
         $factoryBuildingTable = $showData['factoryBuildingTable'] ?? [];
 
-        $typeString = $summary['quickBarType'] ?? null;
+        $typeString = $factoryBuildingTable['quickBarType'] ?? null;
         $facilityType = $typeString ? FacilityType::tryFrom($typeString) : null;
 
         if ($facilityType === null && $typeString !== null) {
@@ -164,12 +164,12 @@ class SyncEndfieldData extends Command
     protected function syncItem(string $slug, Locale $locale, array $indexData, array $showData): void
     {
         $summary = $showData['summary'] ?? [];
-        $itemTable = $showData['itemTable'] ?? [];
+        $itemTypeTable = $showData['itemTypeTable'] ?? [];
 
-        $typeString = $summary['typeName'] ?? null;
+        $typeString = $itemTypeTable['name'] ?? null;
         $itemType = null;
 
-        if ($typeString !== null) {
+        if ($typeString !== null && $locale === Locale::ENGLISH) {
             $typeSnakeCase = Str::of($typeString)->snake()->lower()->toString();
             $itemType = ItemType::tryFrom($typeSnakeCase);
 
@@ -182,10 +182,12 @@ class SyncEndfieldData extends Command
             ['slug' => $slug],
             [
                 'icon' => $indexData['iconId'] ?? '',
-                'type' => $itemType,
                 'output_facility_craft_table' => $showData['outFactoryMachineCraftTable'] ?? [],
             ]
         );
+        if ($locale === Locale::ENGLISH) {
+            $item->type = $itemType;
+        }
 
         if (isset($summary['name'])) {
             $item->setTranslation('name', $locale->value, $summary['name']);

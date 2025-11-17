@@ -39,7 +39,7 @@ class ProviderController extends Controller
             if ($providerRecord) {
                 Auth::login($providerRecord->user);
 
-                return redirect()->intended('/');
+                return redirect()->intended(config('app.frontend_url'));
             }
 
             // Check if user exists with this email
@@ -55,7 +55,7 @@ class ProviderController extends Controller
 
                 Auth::login($user);
 
-                return redirect()->intended('/');
+                return redirect()->intended(config('app.frontend_url'));
             }
 
             // New user - create account
@@ -73,9 +73,9 @@ class ProviderController extends Controller
 
             Auth::login($user);
 
-            return redirect()->intended('/');
+            return redirect()->away(config('app.frontend_url'));
         } catch (\Exception $e) {
-            return redirect('/')->withErrors([
+            return redirect()->away(config('app.frontend_url'))->withErrors([
                 'error' => 'Authentication failed. Please try again.',
             ]);
         }

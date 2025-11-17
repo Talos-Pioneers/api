@@ -13,7 +13,7 @@ beforeEach(function () {
 
 it('can register a new user', function () {
     $response = $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
         'username' => 'testuser',
     ]);
 
@@ -22,7 +22,7 @@ it('can register a new user', function () {
             'message' => 'Registration successful. Please check your email for the magic link.',
         ]);
 
-    expect(User::where('email', 'test@example.com')->exists())->toBeTrue();
+    expect(User::where('email', 'test@gmail.com')->exists())->toBeTrue();
     Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) {
         return $mail->type === 'register';
     });
@@ -39,7 +39,7 @@ it('requires email for registration', function () {
 
 it('requires username for registration', function () {
     $response = $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
     ]);
 
     $response->assertUnprocessable()
@@ -57,10 +57,10 @@ it('requires valid email format', function () {
 });
 
 it('prevents duplicate email registration', function () {
-    User::factory()->create(['email' => 'existing@example.com']);
+    User::factory()->create(['email' => 'existing@gmail.com']);
 
     $response = $this->postJson('/register', [
-        'email' => 'existing@example.com',
+        'email' => 'existing@gmail.com',
         'username' => 'newuser',
     ]);
 
@@ -72,7 +72,7 @@ it('prevents duplicate username registration', function () {
     User::factory()->create(['username' => 'existinguser']);
 
     $response = $this->postJson('/register', [
-        'email' => 'new@example.com',
+        'email' => 'new@gmail.com',
         'username' => 'existinguser',
     ]);
 
@@ -82,11 +82,11 @@ it('prevents duplicate username registration', function () {
 
 it('sends magic link email to registered user', function () {
     $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
         'username' => 'testuser',
     ]);
 
-    $user = User::where('email', 'test@example.com')->first();
+    $user = User::where('email', 'test@gmail.com')->first();
 
     Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email) && $mail->type === 'register';
@@ -95,28 +95,28 @@ it('sends magic link email to registered user', function () {
 
 it('defaults to english locale when not provided', function () {
     $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
         'username' => 'testuser',
     ]);
 
-    $user = User::where('email', 'test@example.com')->first();
+    $user = User::where('email', 'test@gmail.com')->first();
     expect($user->locale)->toBe(Locale::ENGLISH);
 });
 
 it('uses provided locale when registering', function () {
     $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
         'username' => 'testuser',
         'locale' => Locale::JAPANESE->value,
     ]);
 
-    $user = User::where('email', 'test@example.com')->first();
+    $user = User::where('email', 'test@gmail.com')->first();
     expect($user->locale)->toBe(Locale::JAPANESE);
 });
 
 it('validates locale enum value', function () {
     $response = $this->postJson('/register', [
-        'email' => 'test@example.com',
+        'email' => 'test@gmail.com',
         'username' => 'testuser',
         'locale' => 'invalid-locale',
     ]);

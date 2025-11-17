@@ -16,9 +16,12 @@ class LoginController extends Controller
     public function store(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->validated('email'))->firstOrFail();
+        $action = new LoginAction($user);
+        $action->remember();
+        $action->redirect(redirect()->away(config('app.frontend_url')));
 
         $magicLink = MagicLink::create(
-            new LoginAction($user),
+            $action,
             4320,
             1,
         );

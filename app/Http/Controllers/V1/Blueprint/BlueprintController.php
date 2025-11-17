@@ -45,7 +45,7 @@ class BlueprintController extends Controller
                     'copies_count',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
-                ->allowedSorts(['created_at', 'updated_at', 'title'])
+                ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
                 ->defaultSort('created_at')
                 ->paginate(25)
                 ->appends(request()->query())
