@@ -1035,7 +1035,7 @@ it('can filter blueprints by region', function () {
 
     Blueprint::factory()->create([
         'status' => Status::PUBLISHED,
-        'region' => Region::JINLONG,
+        'region' => Region::WULING,
     ]);
 
     $response = $this->getJson('/api/v1/blueprints?filter[region]='.Region::VALLEY_IV->value);

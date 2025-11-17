@@ -141,7 +141,7 @@ it('can filter by region', function () {
 
     Blueprint::factory()->create([
         'creator_id' => $this->user->id,
-        'region' => Region::JINLONG,
+        'region' => Region::WULING,
     ]);
 
     $response = $this->getJson('/api/v1/my/blueprints?filter[region]='.Region::VALLEY_IV->value);
