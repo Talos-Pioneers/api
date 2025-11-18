@@ -1,6 +1,6 @@
 # Talos Pioneers Backend
 
-Talos Pioneers is the backend API for a blueprint sharing platform for **Arknights Endfield**. The platform allows players to create, share, like, and comment on game blueprints (base designs/builds) using shareable codes that can be pasted directly into the game. Users can organize blueprints into collections, manage game-related facilities and items, and interact with the community through comments and likes. The world where the game takes place is called "Talos", hence the project name.
+Talos Pioneers is the backend API for a blueprint sharing platform for **Arknights Endfield**. The platform allows players to create, share, like, and comment on game blueprints (base designs/builds) using shareable codes that can be pasted directly into the game. Users can organize blueprints into collections, manage game-related facilities and items, and interact with the community through comments and likes.
 
 ## Table of Contents
 
