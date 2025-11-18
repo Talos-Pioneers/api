@@ -16,10 +16,12 @@ class RegisterController extends Controller
 {
     public function store(RegisterRequest $request): JsonResponse
     {
+        $locale = $request->validated('locale') ? Locale::fromString($request->validated('locale')) : Locale::ENGLISH;
+
         $user = User::create([
             'email' => $request->validated('email'),
             'username' => $request->validated('username'),
-            'locale' => $request->validated('locale') ?? Locale::ENGLISH,
+            'locale' => $locale,
         ]);
 
         $action = new LoginAction($user);

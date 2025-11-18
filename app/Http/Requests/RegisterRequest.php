@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\Locale;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -26,7 +24,7 @@ class RegisterRequest extends FormRequest
         return [
             'email' => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email', app()->environment() === 'production' ? 'indisposable' : null],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'locale' => ['nullable', Rule::enum(Locale::class)],
+            'locale' => ['nullable', 'string'],
         ];
     }
 }

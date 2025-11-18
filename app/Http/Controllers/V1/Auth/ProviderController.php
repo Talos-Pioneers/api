@@ -20,6 +20,13 @@ class ProviderController extends Controller
             abort(404);
         }
 
+        // get locale from query string
+        $locale = request()->get('locale');
+        if ($locale) {
+            $locale = Locale::fromString($locale);
+            session()->put('locale', $locale);
+        }
+
         return Socialite::driver($provider)->redirect();
     }
 
@@ -92,8 +99,8 @@ class ProviderController extends Controller
 
     private function detectLocaleFromProvider($socialUser): Locale
     {
-        $rawUser = $socialUser->user ?? [];
-        $locale = $rawUser['locale'] ?? $rawUser['language'] ?? null;
+        $rawUser = $socialUser->getRaw() ?? [];
+        $locale = $rawUser['locale'] ?? $rawUser['language'] ?? session()->get('locale') ?? null;
 
         if ($locale) {
             $localeMatch = Locale::fromString($locale);
