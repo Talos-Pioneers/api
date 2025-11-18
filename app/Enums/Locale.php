@@ -17,7 +17,7 @@ enum Locale: string
     case ITALIAN = 'it-IT';
     case INDONESIAN = 'id-ID';
     case THAI = 'th-TH';
-    case VIET = 'vt-VN';
+    case VIET = 'vi-VN';
 
     public static function fromString(string $locale): ?Locale
     {
@@ -35,7 +35,7 @@ enum Locale: string
             'it', 'it-IT' => Locale::ITALIAN,
             'id', 'id-ID' => Locale::INDONESIAN,
             'th', 'th-TH' => Locale::THAI,
-            'vi', 'vt-VN' => Locale::VIET,
+            'vi', 'vi-VN' => Locale::VIET,
             default => null,
         };
     }
