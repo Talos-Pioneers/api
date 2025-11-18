@@ -53,7 +53,8 @@ class BlueprintResource extends JsonResource
                 'type' => $tag->type,
             ]),
             'gallery' => $this->getMedia('gallery')->map(fn ($media) => [
-                'url' => $media->getUrl(),
+                'thumbnail' => $media->getTemporaryUrl(now()->addMinutes(5), 'thumb'),
+                'url' => $media->getTemporaryUrl(now()->addMinutes(5), 'optimized'),
                 'name' => $media->name,
             ]),
             'likes_count' => $this->whenCounted('likes') ?? $this->likes()->count(),

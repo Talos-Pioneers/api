@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aws/aws-sdk-php": "^3.360",
         "beyondcode/laravel-comments": "^1.8",
         "cesargb/laravel-magiclink": "^2.24",
         "laravel/framework": "^12.0",
