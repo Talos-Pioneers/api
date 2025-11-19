@@ -31,7 +31,7 @@ class BlueprintController extends Controller
         return BlueprintResource::collection(
             QueryBuilder::for(Blueprint::class)
                 ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
-                ->withCount(['likes', 'copies'])
+                ->withCount(['likes', 'copies', 'comments'])
                 ->where('status', Status::PUBLISHED)
                 ->allowedFilters([
                     'region',
