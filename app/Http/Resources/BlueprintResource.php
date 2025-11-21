@@ -48,6 +48,7 @@ class BlueprintResource extends JsonResource
                 'name' => $this->creator->username,
             ],
             'tags' => $this->tags->map(fn ($tag) => [
+                'id' => $tag->id,
                 'name' => $tag->name,
                 'slug' => $tag->slug,
                 'type' => $tag->type,

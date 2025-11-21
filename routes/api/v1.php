@@ -10,6 +10,7 @@ use App\Http\Controllers\V1\Blueprint\MyCollectionsController;
 use App\Http\Controllers\V1\Blueprint\TagController;
 use App\Http\Controllers\V1\FacilityController;
 use App\Http\Controllers\V1\ItemController;
+use App\Http\Controllers\V1\ReportController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
@@ -41,4 +42,7 @@ Route::middleware(['auth:sanctum', HandlePrecognitiveRequests::class])->group(fu
     Route::post('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'store']);
     Route::put('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'update']);
     Route::delete('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'destroy']);
+
+    // Reports route
+    Route::post('reports', [ReportController::class, 'store']);
 });
