@@ -26,6 +26,8 @@ class BlueprintCollectionController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = min($request->input('per_page', 25), 50);
+
         return BlueprintCollectionResource::collection(
             QueryBuilder::for(BlueprintCollection::class)
                 ->with(['creator', 'blueprints'])
@@ -36,7 +38,7 @@ class BlueprintCollectionController extends Controller
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')
-                ->paginate(25)->appends(request()->query()
+                ->paginate($perPage)->appends(request()->query()
                 )
         );
     }
