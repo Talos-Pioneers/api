@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class CommentResource extends JsonResource
 {
@@ -14,6 +15,8 @@ class CommentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+
         return [
             'id' => $this->id,
             'comment' => $this->comment,
@@ -33,6 +36,10 @@ class CommentResource extends JsonResource
                 return CommentResource::collection($this->comments);
             }),
             'replies_count' => $this->whenCounted('comments', $this->comments_count),
+            'permissions' => [
+                'can_edit' => $user ? Gate::forUser($user)->allows('update', $this->resource) : false,
+                'can_delete' => $user ? Gate::forUser($user)->allows('delete', $this->resource) : false,
+            ],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

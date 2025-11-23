@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class BlueprintResource extends JsonResource
 {
@@ -65,6 +66,10 @@ class BlueprintResource extends JsonResource
             'copies_count' => $this->whenCounted('copies') ?? $this->copies()->count(),
             'comments_count' => $this->whenCounted('comments') ?? $this->comments()->count(),
             'is_liked' => $user ? $this->isLikedBy($user) : false,
+            'permissions' => [
+                'can_edit' => $user ? Gate::forUser($user)->allows('update', $this->resource) : false,
+                'can_delete' => $user ? Gate::forUser($user)->allows('delete', $this->resource) : false,
+            ],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
