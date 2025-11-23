@@ -23,8 +23,7 @@ class ItemController extends Controller
             ])
             ->allowedSorts(['slug', 'type', 'created_at', 'updated_at'])
             ->defaultSort('slug')
-            ->paginate(25)
-            ->appends(request()->query());
+            ->get();
 
         return ItemResource::collection($items);
     }
