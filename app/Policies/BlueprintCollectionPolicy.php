@@ -22,10 +22,10 @@ class BlueprintCollectionPolicy
      * Public (published) collections can be viewed by anyone.
      * Private (draft) collections can only be viewed by the creator.
      */
-    public function view(User $user, BlueprintCollection $blueprintCollection): bool
+    public function view(?User $user, BlueprintCollection $blueprintCollection): bool
     {
-        return $blueprintCollection->creator_id === $user->id
-            || $user->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS)
+        return $user?->id === $blueprintCollection->creator_id
+            || $user?->hasPermissionTo(Permission::MANAGE_ALL_COLLECTIONS)
             || $blueprintCollection->status === Status::PUBLISHED;
     }
 

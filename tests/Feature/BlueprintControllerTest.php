@@ -1488,3 +1488,25 @@ it('can filter blueprints by multiple facilities', function () {
             'id' => $blueprint1->id,
         ]);
 });
+
+it('includes facility and item icons in blueprint response', function () {
+    $facility = Facility::factory()->create(['icon' => 'facility-icon']);
+    $itemInput = Item::factory()->create(['icon' => 'item-input-icon']);
+    $itemOutput = Item::factory()->create(['icon' => 'item-output-icon']);
+
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'status' => Status::PUBLISHED,
+    ]);
+
+    $blueprint->facilities()->attach($facility->id, ['quantity' => 2]);
+    $blueprint->itemInputs()->attach($itemInput->id, ['quantity' => 3]);
+    $blueprint->itemOutputs()->attach($itemOutput->id, ['quantity' => 4]);
+
+    $response = $this->getJson("/api/v1/blueprints/{$blueprint->id}");
+
+    $response->assertSuccessful()
+        ->assertJsonPath('data.facilities.0.icon', 'facility-icon')
+        ->assertJsonPath('data.item_inputs.0.icon', 'item-input-icon')
+        ->assertJsonPath('data.item_outputs.0.icon', 'item-output-icon');
+});

@@ -20,10 +20,10 @@ class BlueprintPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Blueprint $blueprint): bool
+    public function view(?User $user, Blueprint $blueprint): bool
     {
-        return $blueprint->creator_id === $user->id
-            || $user->hasPermissionTo(Permission::MANAGE_ALL_BLUEPRINTS)
+        return $user?->id === $blueprint->creator_id
+            || $user?->hasPermissionTo(Permission::MANAGE_ALL_BLUEPRINTS)
             || $blueprint->status === Status::PUBLISHED;
     }
 
