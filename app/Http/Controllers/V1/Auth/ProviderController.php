@@ -102,7 +102,7 @@ class ProviderController extends Controller
         $rawUser = $socialUser->getRaw() ?? [];
         $locale = $rawUser['locale'] ?? $rawUser['language'] ?? session()->get('locale') ?? null;
 
-        if ($locale) {
+        if ($locale && is_string($locale)) {
             $localeMatch = Locale::fromString($locale);
 
             if ($localeMatch) {
@@ -114,6 +114,10 @@ class ProviderController extends Controller
             $languageMatch = Locale::fromString($languageCode);
 
             return $languageMatch ?? Locale::ENGLISH;
+        }
+
+        if ($locale instanceof Locale) {
+            return $locale;
         }
 
         return Locale::ENGLISH;

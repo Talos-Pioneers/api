@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "openai-php/client": "^0.18.0",
         "propaganistas/laravel-disposable-email": "^2.4",
         "socialiteproviders/discord": "^4.2",

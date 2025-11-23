@@ -100,8 +100,9 @@ class AutoMod
         }
 
         // Add image inputs (base64 encoded)
-        foreach ($this->images as $image) {
-            $imageData = $this->getImageDataUri($image);
+        // TODO: Handle multiple images if supported in the future; for now, only use the first image
+        if (! empty($this->images)) {
+            $imageData = $this->getImageDataUri($this->images[0]);
             $input[] = [
                 'type' => 'image_url',
                 'image_url' => [
