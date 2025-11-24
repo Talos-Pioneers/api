@@ -19,8 +19,7 @@ return new class extends Migration
             $table->text('reason')->nullable();
             $table->timestamps();
 
-            $table->unique(['user_id', 'reportable_type', 'reportable_id']);
-            $table->index(['reportable_type', 'reportable_id']);
+            $table->unique(['user_id', 'reportable_id', 'reportable_type']);
         });
     }
 
