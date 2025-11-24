@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\V1\Auth\LoginController;
+use App\Http\Controllers\V1\Auth\LogoutController;
 use App\Http\Controllers\V1\Auth\ProviderController;
 use App\Http\Controllers\V1\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
@@ -13,3 +14,5 @@ Route::get('auth/{provider}/callback', [ProviderController::class, 'callback'])-
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::post('logout', [LogoutController::class, 'destroy'])->name('logout');
