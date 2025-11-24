@@ -13,7 +13,7 @@ class CreateCommentsTable extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->increments('id');
-            $table->morphs('commentable');
+            $table->ulidMorphs('commentable');
             $table->text('comment');
             $table->boolean('is_approved')->default(false);
             $table->unsignedBigInteger('user_id')->nullable();
