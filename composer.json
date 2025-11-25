@@ -20,6 +20,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "openai-php/client": "^0.18.0",
         "propaganistas/laravel-disposable-email": "^2.4",
+        "sentry/sentry-laravel": "^4.19",
         "socialiteproviders/discord": "^4.2",
         "spatie/laravel-medialibrary": "^11.17",
         "spatie/laravel-permission": "^6.23",
