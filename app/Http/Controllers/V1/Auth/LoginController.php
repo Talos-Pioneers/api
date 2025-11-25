@@ -18,6 +18,7 @@ class LoginController extends Controller
         $user = User::where('email', $request->validated('email'))->firstOrFail();
         $action = new LoginAction($user);
         $action->remember();
+
         $action->redirect(redirect()->away(config('app.frontend_url')));
 
         $magicLink = MagicLink::create(
