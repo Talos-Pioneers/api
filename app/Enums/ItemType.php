@@ -49,4 +49,15 @@ enum ItemType: string
             default => 'Unknown',
         };
     }
+
+    public static function craftableTypes(): array
+    {
+        return [
+            self::MATERIAL,
+            self::SEEDS,
+            self::CONSUMABLES,
+            self::CRYSTAL,
+            self::WEAPON_MATERIAL,
+        ];
+    }
 }

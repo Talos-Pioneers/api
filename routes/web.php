@@ -12,7 +12,7 @@ Route::post('register', [RegisterController::class, 'store']);
 Route::get('auth/{provider}/redirect', [ProviderController::class, 'redirect'])->name('auth.provider.redirect');
 Route::get('auth/{provider}/callback', [ProviderController::class, 'callback'])->name('auth.provider.callback');
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->away(config('app.frontend_url'));
 });
 
 Route::post('logout', [LogoutController::class, 'destroy'])->name('logout');

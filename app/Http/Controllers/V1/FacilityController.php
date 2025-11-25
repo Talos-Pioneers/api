@@ -17,6 +17,7 @@ class FacilityController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $facilities = QueryBuilder::for(Facility::class)
+            ->whereNotNull('type')
             ->allowedFilters([
                 'slug',
                 AllowedFilter::exact('type'),

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1;
 
+use App\Enums\ItemType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ItemResource;
 use App\Models\Item;
@@ -17,6 +18,7 @@ class ItemController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $items = QueryBuilder::for(Item::class)
+            ->whereIn('type', ItemType::craftableTypes())
             ->allowedFilters([
                 'slug',
                 AllowedFilter::exact('type'),
