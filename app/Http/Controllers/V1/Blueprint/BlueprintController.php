@@ -64,8 +64,8 @@ class BlueprintController extends Controller
         // Run content moderation
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build()
-                ->text($validated['title'] ?? null)
-                ->text($validated['description'] ?? null);
+                ->text($validated['title'] ?? null, 'title')
+                ->text($validated['description'] ?? null, 'description');
 
             if ($request->hasFile('gallery')) {
                 $autoMod->images($request->file('gallery'));

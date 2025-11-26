@@ -54,10 +54,13 @@ class AutoMod
         return new self($openAiClient);
     }
 
-    public function text(?string $text): self
+    public function text(?string $text, ?string $label): self
     {
         if ($text !== null && $text !== '') {
-            $this->texts[] = $text;
+            $this->texts[] = [
+                'text' => $text,
+                'label' => $label,
+            ];
         }
 
         return $this;
@@ -91,13 +94,10 @@ class AutoMod
     {
         $input = [];
 
-        // Add text inputs
-        foreach ($this->texts as $text) {
-            $input[] = [
-                'type' => 'text',
-                'text' => $text,
-            ];
-        }
+        $input[] = [
+            'type' => 'text',
+            'text' => collect($this->texts)->map(fn ($text) => $text['label'] ?? ''."\n".$text['text'])->join('\n'),
+        ];
 
         // Add image inputs (base64 encoded)
         // TODO: Handle multiple images if supported in the future; for now, only use the first image
