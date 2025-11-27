@@ -261,6 +261,16 @@ class BlueprintController extends Controller implements HasMiddleware
                 $blueprint->syncTags($tags);
             }
 
+            // Handle gallery image deletion - delete images not in keep list
+            $keepIds = $validated['gallery_keep_ids'] ?? [];
+            $keepIds = array_map('intval', $keepIds);
+            $currentMedia = $blueprint->getMedia('gallery');
+            foreach ($currentMedia as $media) {
+                if (! in_array((int) $media->id, $keepIds, true)) {
+                    $media->delete();
+                }
+            }
+
             // Handle gallery uploads
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $file) {

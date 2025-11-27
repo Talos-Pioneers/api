@@ -58,6 +58,7 @@ class BlueprintResource extends JsonResource
                 'type' => $tag->type,
             ]),
             'gallery' => $this->getMedia('gallery')->map(fn ($media) => [
+                'id' => (string) $media->id,
                 'thumbnail' => $media->getTemporaryUrl(now()->addMinutes(5), 'thumb'),
                 'url' => $media->getTemporaryUrl(now()->addMinutes(5), 'optimized'),
                 'name' => $media->name,
