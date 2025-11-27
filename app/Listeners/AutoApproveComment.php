@@ -21,7 +21,7 @@ class AutoApproveComment
 
         // Run AutoMod validation on the comment text
         $autoMod = AutoMod::build()
-            ->text($comment->comment);
+            ->text($comment->comment, 'Comment');
 
         $moderationResult = $autoMod->validate();
 

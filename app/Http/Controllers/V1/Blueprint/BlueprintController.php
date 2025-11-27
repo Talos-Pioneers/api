@@ -19,7 +19,6 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
@@ -72,6 +71,7 @@ class BlueprintController extends Controller implements HasMiddleware
         $validated = $request->validated();
 
         // Run content moderation
+        $needsReview = false;
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build()
                 ->text($validated['title'] ?? null, 'title')
@@ -81,18 +81,14 @@ class BlueprintController extends Controller implements HasMiddleware
                 $autoMod->images($request->file('gallery'));
             }
 
-            $moderationResult = $autoMod->validate();
+            $autoMod->validate();
 
             if ($autoMod->fails()) {
-                throw ValidationException::withMessages([
-                    'moderation' => ['Content moderation failed. Please review your content.'],
-                    'flagged_texts' => $moderationResult['flagged_texts'],
-                    'flagged_images' => $moderationResult['flagged_images'],
-                ]);
+                $needsReview = true;
             }
         }
 
-        $blueprint = DB::transaction(function () use ($validated, $request) {
+        $blueprint = DB::transaction(function () use ($validated, $request, $needsReview) {
             /** @var User $user */
             $user = $request->user();
 
@@ -103,7 +99,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 'slug' => str($validated['title'])->slug(),
                 'version' => $validated['version'],
                 'description' => $validated['description'] ?? null,
-                'status' => $validated['status'] ?? \App\Enums\Status::DRAFT,
+                'status' => $needsReview ? Status::REVIEW : ($validated['status'] ?? Status::DRAFT),
                 'region' => $validated['region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
             ]);
@@ -175,31 +171,30 @@ class BlueprintController extends Controller implements HasMiddleware
         $validated = $request->validated();
 
         // Run content moderation on updated fields
-        $autoMod = AutoMod::build();
+        $needsReview = false;
+        if (config('services.auto_mod.enabled')) {
+            $autoMod = AutoMod::build();
 
-        if (isset($validated['title'])) {
-            $autoMod->text($validated['title']);
+            if (isset($validated['title'])) {
+                $autoMod->text($validated['title'], 'title');
+            }
+
+            if (isset($validated['description'])) {
+                $autoMod->text($validated['description'], 'description');
+            }
+
+            if ($request->hasFile('gallery')) {
+                $autoMod->images($request->file('gallery'));
+            }
+
+            $autoMod->validate();
+
+            if ($autoMod->fails()) {
+                $needsReview = true;
+            }
         }
 
-        if (isset($validated['description'])) {
-            $autoMod->text($validated['description']);
-        }
-
-        if ($request->hasFile('gallery')) {
-            $autoMod->images($request->file('gallery'));
-        }
-
-        $moderationResult = $autoMod->validate();
-
-        if ($autoMod->fails()) {
-            throw ValidationException::withMessages([
-                'moderation' => ['Content moderation failed. Please review your content.'],
-                'flagged_texts' => $moderationResult['flagged_texts'],
-                'flagged_images' => $moderationResult['flagged_images'],
-            ]);
-        }
-
-        $blueprint = DB::transaction(function () use ($blueprint, $validated, $request) {
+        $blueprint = DB::transaction(function () use ($blueprint, $validated, $request, $needsReview) {
             if (isset($validated['title'])) {
                 $blueprint->title = $validated['title'];
                 $blueprint->slug = str($validated['title'])->slug();
@@ -219,6 +214,8 @@ class BlueprintController extends Controller implements HasMiddleware
 
             if (isset($validated['status'])) {
                 $blueprint->status = $validated['status'];
+            } elseif ($needsReview) {
+                $blueprint->status = Status::REVIEW;
             }
 
             if (isset($validated['region'])) {

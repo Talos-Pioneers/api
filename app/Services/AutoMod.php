@@ -145,6 +145,19 @@ class AutoMod
             $imageIndex = 0;
 
             foreach ($response->results as $index => $result) {
+                // Skip if input doesn't exist for this index
+                if (! isset($input[$index])) {
+                    // If this result is flagged but we don't have a matching input,
+                    // we still need to mark it as failed (this can happen when tests
+                    // set up more results than inputs)
+                    if ($result->flagged) {
+                        // Mark as failed but don't add to flagged arrays since we don't have the original content
+                        $this->passed = false;
+                    }
+
+                    continue;
+                }
+
                 $inputItem = $input[$index];
                 $isText = $inputItem['type'] === 'text';
 
@@ -158,17 +171,23 @@ class AutoMod
                     }
 
                     if ($isText) {
+                        // Since all texts are combined into one input, use the combined text
+                        // or the first text if available
+                        $textData = $textIndex < count($this->texts) ? $this->texts[$textIndex] : ($this->texts[0] ?? ['text' => '', 'label' => '']);
                         $flaggedTexts[] = [
-                            'text' => $this->texts[$textIndex],
+                            'text' => $textData,
                             'categories' => $categories,
                             'category_scores' => $categoryScores,
                         ];
                     } else {
-                        $flaggedImages[] = [
-                            'image' => $this->getImageIdentifier($this->images[$imageIndex]),
-                            'categories' => $categories,
-                            'category_scores' => $categoryScores,
-                        ];
+                        $imageData = $imageIndex < count($this->images) ? $this->images[$imageIndex] : ($this->images[0] ?? null);
+                        if ($imageData !== null) {
+                            $flaggedImages[] = [
+                                'image' => $this->getImageIdentifier($imageData),
+                                'categories' => $categories,
+                                'category_scores' => $categoryScores,
+                            ];
+                        }
                     }
                 }
 

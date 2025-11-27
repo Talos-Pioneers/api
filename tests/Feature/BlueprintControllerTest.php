@@ -757,7 +757,7 @@ it('cannot copy a blueprint without authentication', function () {
     $response->assertUnauthorized();
 });
 
-it('rejects blueprint creation when title fails moderation', function () {
+it('sets status to review when title fails moderation', function () {
     Config::set('services.auto_mod.enabled', true);
 
     $client = new \OpenAI\Testing\ClientFake([
@@ -781,21 +781,16 @@ it('rejects blueprint creation when title fails moderation', function () {
         'version' => GameVersion::CBT_3->value,
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['moderation']);
+    $response->assertSuccessful();
+    expect($response->json('data.status'))->toBe(Status::REVIEW->value);
 });
 
-it('rejects blueprint creation when description fails moderation', function () {
+it('sets status to review when description fails moderation', function () {
     Config::set('services.auto_mod.enabled', true);
 
     $client = new \OpenAI\Testing\ClientFake([
         \OpenAI\Responses\Moderations\CreateResponse::fake([
             'results' => [
-                [
-                    'flagged' => false,
-                    'categories' => [],
-                    'category_scores' => [],
-                ],
                 [
                     'flagged' => true,
                     'categories' => ['harassment' => true],
@@ -814,8 +809,8 @@ it('rejects blueprint creation when description fails moderation', function () {
         'version' => GameVersion::CBT_3->value,
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['moderation']);
+    $response->assertSuccessful();
+    expect($response->json('data.status'))->toBe(Status::REVIEW->value);
 });
 
 it('allows blueprint creation when content passes moderation', function () {
@@ -850,7 +845,7 @@ it('allows blueprint creation when content passes moderation', function () {
     $response->assertSuccessful();
 });
 
-it('rejects blueprint update when title fails moderation', function () {
+it('sets status to review when title fails moderation during update', function () {
     Config::set('services.auto_mod.enabled', true);
 
     $blueprint = Blueprint::factory()->create([
@@ -875,8 +870,8 @@ it('rejects blueprint update when title fails moderation', function () {
         'title' => 'Inappropriate Updated Title',
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['moderation']);
+    $response->assertSuccessful();
+    expect($response->json('data.status'))->toBe(Status::REVIEW->value);
 });
 
 it('allows blueprint update when content passes moderation', function () {
@@ -939,7 +934,7 @@ it('handles moderation api errors gracefully during creation', function () {
     $response->assertSuccessful();
 });
 
-it('rejects blueprint creation when image fails moderation', function () {
+it('sets status to review when image fails moderation', function () {
     Config::set('services.auto_mod.enabled', true);
 
     $image = UploadedFile::fake()->image('inappropriate.jpg');
@@ -947,11 +942,6 @@ it('rejects blueprint creation when image fails moderation', function () {
     $client = new \OpenAI\Testing\ClientFake([
         \OpenAI\Responses\Moderations\CreateResponse::fake([
             'results' => [
-                [
-                    'flagged' => false,
-                    'categories' => [],
-                    'category_scores' => [],
-                ],
                 [
                     'flagged' => false,
                     'categories' => [],
@@ -976,8 +966,8 @@ it('rejects blueprint creation when image fails moderation', function () {
         'gallery' => [$image],
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['moderation']);
+    $response->assertSuccessful();
+    expect($response->json('data.status'))->toBe(Status::REVIEW->value);
 });
 
 it('allows blueprint creation when images pass moderation', function () {
