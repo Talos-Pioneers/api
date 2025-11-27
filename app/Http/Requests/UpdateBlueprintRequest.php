@@ -29,7 +29,7 @@ class UpdateBlueprintRequest extends FormRequest
             'code' => ['sometimes', 'string', 'max:255'],
             'title' => ['sometimes', 'string', 'max:255'],
             'version' => ['sometimes', Rule::enum(GameVersion::class)],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2500'],
             'status' => ['nullable', Rule::enum(Status::class)],
             'region' => ['nullable', Rule::enum(Region::class)],
             'facilities' => ['nullable', 'array'],

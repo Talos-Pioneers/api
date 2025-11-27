@@ -29,7 +29,7 @@ class StoreBlueprintRequest extends FormRequest
             'code' => ['required', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'version' => ['required', Rule::enum(GameVersion::class)],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2500'],
             'status' => ['nullable', Rule::enum(Status::class)],
             'region' => ['nullable', Rule::enum(Region::class)],
             'is_anonymous' => ['nullable', 'boolean'],
