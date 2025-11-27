@@ -44,5 +44,7 @@
     "Unauthorized": "ไม่มีสิทธิ",
     "Verify Email Address": "ยืนยันที่อยู่อีเมล",
     "Whoops!": "ขออภัย",
-    "You are receiving this email because we received a password reset request for your account.": "คุณได้รับอีเมลสำหรับรีเซตรหัสผ่าน เนื่องจากเราได้รับคำร้องขอรีเซตรหัสผ่านสำหรับบัญชีของคุณ"
+    "You are receiving this email because we received a password reset request for your account.": "คุณได้รับอีเมลสำหรับรีเซตรหัสผ่าน เนื่องจากเราได้รับคำร้องขอรีเซตรหัสผ่านสำหรับบัญชีของคุณ",
+    "Registration successful. Please check your email for the magic link.": "ลงทะเบียนสำเร็จ กรุณาตรวจสอบอีเมลของคุณสำหรับลิงก์มหัศจรรย์",
+    "Please check your email for the magic link.": "กรุณาตรวจสอบอีเมลของคุณสำหรับลิงก์มหัศจรรย์"
 }

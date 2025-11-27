@@ -44,5 +44,7 @@
     "Unauthorized": "Tidak Diizinkan",
     "Verify Email Address": "Verifikasi Alamat Surel",
     "Whoops!": "Aduh!",
-    "You are receiving this email because we received a password reset request for your account.": "Anda menerima surel ini karena kami menerima permintaan pengaturan ulang kata sandi untuk akun anda."
+    "You are receiving this email because we received a password reset request for your account.": "Anda menerima surel ini karena kami menerima permintaan pengaturan ulang kata sandi untuk akun anda.",
+    "Registration successful. Please check your email for the magic link.": "Pendaftaran berhasil. Silakan periksa surel Anda untuk tautan ajaib.",
+    "Please check your email for the magic link.": "Silakan periksa surel Anda untuk tautan ajaib."
 }

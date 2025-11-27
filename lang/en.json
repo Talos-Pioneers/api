@@ -44,5 +44,7 @@
     "Unauthorized": "Unauthorized",
     "Verify Email Address": "Verify Email Address",
     "Whoops!": "Whoops!",
-    "You are receiving this email because we received a password reset request for your account.": "You are receiving this email because we received a password reset request for your account."
+    "You are receiving this email because we received a password reset request for your account.": "You are receiving this email because we received a password reset request for your account.",
+    "Registration successful. Please check your email for the magic link.": "Registration successful. Please check your email for the magic link.",
+    "Please check your email for the magic link.": "Please check your email for the magic link."
 }

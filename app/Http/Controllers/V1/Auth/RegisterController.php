@@ -47,7 +47,7 @@ class RegisterController extends Controller implements HasMiddleware
         Mail::to($user->email)->send(new MagicLinkMail($magicLink->url, 'register'));
 
         return response()->json([
-            'message' => 'Registration successful. Please check your email for the magic link.',
+            'message' => __('Registration successful. Please check your email for the magic link.'),
         ]);
     }
 }

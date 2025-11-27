@@ -44,5 +44,7 @@
     "Unauthorized": "Не авторизован",
     "Verify Email Address": "Подтвердить адрес электронной почты",
     "Whoops!": "Упс!",
-    "You are receiving this email because we received a password reset request for your account.": "Вы получили это письмо, потому что мы получили запрос на сброс пароля для Вашей учётной записи."
+    "You are receiving this email because we received a password reset request for your account.": "Вы получили это письмо, потому что мы получили запрос на сброс пароля для Вашей учётной записи.",
+    "Registration successful. Please check your email for the magic link.": "Регистрация прошла успешно. Пожалуйста, проверьте свою электронную почту для получения магической ссылки.",
+    "Please check your email for the magic link.": "Пожалуйста, проверьте свою электронную почту для получения магической ссылки."
 }

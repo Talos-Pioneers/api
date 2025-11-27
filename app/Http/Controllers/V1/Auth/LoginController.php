@@ -30,7 +30,7 @@ class LoginController extends Controller
         Mail::to($user->email)->send(new MagicLinkMail($magicLink->url, 'login'));
 
         return response()->json([
-            'message' => 'Please check your email for the magic link.',
+            'message' => __('Please check your email for the magic link.'),
         ]);
     }
 }

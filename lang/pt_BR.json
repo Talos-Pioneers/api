@@ -44,5 +44,7 @@
     "Unauthorized": "Não autorizado",
     "Verify Email Address": "Verifique o endereço de e-mail",
     "Whoops!": "Ops!",
-    "You are receiving this email because we received a password reset request for your account.": "Você está recebendo este e-mail porque foi solicitada a redefinição da senha da sua conta."
+    "You are receiving this email because we received a password reset request for your account.": "Você está recebendo este e-mail porque foi solicitada a redefinição da senha da sua conta.",
+    "Registration successful. Please check your email for the magic link.": "Registro realizado com sucesso. Por favor, verifique seu e-mail para o link mágico.",
+    "Please check your email for the magic link.": "Por favor, verifique seu e-mail para o link mágico."
 }
