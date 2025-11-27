@@ -7,13 +7,23 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Mail\MagicLinkMail;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Mail;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
 
-class RegisterController extends Controller
+class RegisterController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(HandlePrecognitiveRequests::class, only: ['store']),
+        ];
+    }
+
     public function store(RegisterRequest $request): JsonResponse
     {
         $locale = $request->validated('locale') ? Locale::fromString($request->validated('locale')) : Locale::ENGLISH;

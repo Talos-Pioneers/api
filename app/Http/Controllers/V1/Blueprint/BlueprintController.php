@@ -11,8 +11,11 @@ use App\Models\Blueprint;
 use App\Models\BlueprintCopy;
 use App\Models\User;
 use App\Services\AutoMod;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,8 +24,15 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
-class BlueprintController extends Controller
+class BlueprintController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(HandlePrecognitiveRequests::class, only: ['store', 'update', 'destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -48,7 +58,7 @@ class BlueprintController extends Controller
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
-                ->defaultSort('created_at')
+                ->defaultSort('-created_at')
                 ->paginate($perPage)
                 ->appends(request()->query())
         );
