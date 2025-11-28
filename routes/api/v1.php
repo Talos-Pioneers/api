@@ -24,6 +24,8 @@ Route::apiResource('items', ItemController::class)->only(['index', 'show']);
 Route::get('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'index']);
 Route::get('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'show']);
 
+Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
+
 // Reports route
 Route::post('reports', [ReportController::class, 'store']);
 
@@ -33,7 +35,6 @@ Route::middleware(['auth:sanctum', HandlePrecognitiveRequests::class])->group(fu
     Route::apiResource('tags', TagController::class)->except(['index']);
     Route::apiResource('blueprints', BlueprintController::class)->except(['index', 'show']);
     Route::post('blueprints/{blueprint}/like', [BlueprintController::class, 'like']);
-    Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
     Route::apiResource('collections', BlueprintCollectionController::class)->except(['index', 'show']);
     Route::post('users/{user}/upgrade-to-moderator', [UserController::class, 'upgradeToModerator']);
 

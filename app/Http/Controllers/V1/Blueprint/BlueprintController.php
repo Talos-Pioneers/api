@@ -336,10 +336,6 @@ class BlueprintController extends Controller implements HasMiddleware
      */
     public function copy(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
     {
-        if ($request->user()->cannot('view', $blueprint)) {
-            abort(403, 'You are not authorized to copy this blueprint');
-        }
-
         /** @var User|null $user */
         $user = $request->user();
         $ipAddress = $request->ip();
