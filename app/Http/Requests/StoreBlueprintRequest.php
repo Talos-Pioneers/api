@@ -9,6 +9,8 @@ use App\Enums\Status;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+use function Laravel\Prompts\info;
+
 class StoreBlueprintRequest extends FormRequest
 {
     /**
@@ -16,6 +18,8 @@ class StoreBlueprintRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        info(app()->getLocale());
+
         return $this->user()->can('create', \App\Models\Blueprint::class);
     }
 
@@ -33,7 +37,7 @@ class StoreBlueprintRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2500'],
             'status' => ['nullable', Rule::enum(Status::class)],
             'region' => ['nullable', Rule::enum(Region::class)],
-            'server_region' => ['nullable', Rule::enum(ServerRegion::class)],
+            'server_region' => ['required', Rule::enum(ServerRegion::class)],
             'is_anonymous' => ['nullable', 'boolean'],
             'facilities' => ['nullable', 'array'],
             'facilities.*.id' => ['required', 'integer', 'exists:facilities,id'],

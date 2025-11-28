@@ -33,7 +33,7 @@ class UpdateBlueprintRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2500'],
             'status' => ['nullable', Rule::enum(Status::class)],
             'region' => ['nullable', Rule::enum(Region::class)],
-            'server_region' => ['nullable', Rule::enum(ServerRegion::class)],
+            'server_region' => ['required', Rule::enum(ServerRegion::class)],
             'facilities' => ['nullable', 'array'],
             'facilities.*.id' => ['required', 'integer', 'exists:facilities,id'],
             'facilities.*.quantity' => ['required', 'integer', 'min:1'],
