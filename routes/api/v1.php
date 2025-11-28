@@ -24,6 +24,9 @@ Route::apiResource('items', ItemController::class)->only(['index', 'show']);
 Route::get('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'index']);
 Route::get('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'show']);
 
+// Reports route
+Route::post('reports', [ReportController::class, 'store']);
+
 Route::middleware(['auth:sanctum', HandlePrecognitiveRequests::class])->group(function () {
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
@@ -42,7 +45,4 @@ Route::middleware(['auth:sanctum', HandlePrecognitiveRequests::class])->group(fu
     Route::post('blueprints/{blueprint}/comments', [BlueprintCommentController::class, 'store']);
     Route::put('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'update']);
     Route::delete('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentController::class, 'destroy']);
-
-    // Reports route
-    Route::post('reports', [ReportController::class, 'store']);
 });

@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(User::class)->nullable();
             $table->ulidMorphs('reportable');
             $table->text('reason')->nullable();
             $table->timestamps();

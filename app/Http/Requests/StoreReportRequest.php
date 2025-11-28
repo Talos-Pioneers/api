@@ -14,7 +14,7 @@ class StoreReportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('create', \App\Models\Report::class) ?? false;
+        return true;
     }
 
     /**
