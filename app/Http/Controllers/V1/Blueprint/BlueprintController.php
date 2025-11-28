@@ -46,6 +46,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 ->where('status', Status::PUBLISHED)
                 ->allowedFilters([
                     'region',
+                    'server_region',
                     'version',
                     'is_anonymous',
                     AllowedFilter::scope('author_id', 'createdById'),
@@ -101,6 +102,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 'description' => $validated['description'] ?? null,
                 'status' => $needsReview ? Status::REVIEW : ($validated['status'] ?? Status::DRAFT),
                 'region' => $validated['region'] ?? null,
+                'server_region' => $validated['server_region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
             ]);
 
@@ -220,6 +222,10 @@ class BlueprintController extends Controller implements HasMiddleware
 
             if (isset($validated['region'])) {
                 $blueprint->region = $validated['region'];
+            }
+
+            if (isset($validated['server_region'])) {
+                $blueprint->server_region = $validated['server_region'];
             }
 
             if (isset($validated['is_anonymous'])) {

@@ -26,6 +26,7 @@ class BlueprintResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status->value,
             'region' => $this->region?->value,
+            'server_region' => $this->server_region?->value,
             'facilities' => $this->whenLoaded('facilities', fn () => $this->facilities->map(fn ($facility) => [
                 'id' => $facility->id,
                 'slug' => $facility->slug,

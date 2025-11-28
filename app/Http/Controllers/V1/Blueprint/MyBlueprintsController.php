@@ -29,6 +29,7 @@ class MyBlueprintsController extends Controller
                 ->allowedFilters([
                     'status',
                     'region',
+                    'server_region',
                     'version',
                     'is_anonymous',
                     AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),

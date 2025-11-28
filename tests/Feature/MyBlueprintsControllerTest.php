@@ -2,6 +2,7 @@
 
 use App\Enums\GameVersion;
 use App\Enums\Region;
+use App\Enums\ServerRegion;
 use App\Enums\Status;
 use App\Enums\TagType;
 use App\Models\Blueprint;
@@ -151,6 +152,32 @@ it('can filter by region', function () {
         ->assertJsonFragment([
             'id' => $blueprint1->id,
             'region' => Region::VALLEY_IV->value,
+        ]);
+});
+
+it('can filter by server_region', function () {
+    $blueprint1 = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'server_region' => ServerRegion::AMERICA_EUROPE,
+    ]);
+
+    Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'server_region' => ServerRegion::ASIA,
+    ]);
+
+    Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+        'server_region' => ServerRegion::CN,
+    ]);
+
+    $response = $this->getJson('/api/v1/my/blueprints?filter[server_region]='.ServerRegion::AMERICA_EUROPE->value);
+
+    $response->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment([
+            'id' => $blueprint1->id,
+            'server_region' => ServerRegion::AMERICA_EUROPE->value,
         ]);
 });
 

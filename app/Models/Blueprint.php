@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\GameVersion;
 use App\Enums\Region;
+use App\Enums\ServerRegion;
 use App\Enums\Status;
 use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -36,6 +37,7 @@ class Blueprint extends Model implements HasMedia
         'description',
         'status',
         'region',
+        'server_region',
         'code',
         'is_anonymous',
     ];
@@ -45,6 +47,7 @@ class Blueprint extends Model implements HasMedia
         return [
             'status' => Status::class,
             'region' => Region::class,
+            'server_region' => ServerRegion::class,
             'version' => GameVersion::class,
             'is_anonymous' => 'boolean',
         ];
