@@ -101,7 +101,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 'version' => $validated['version'],
                 'description' => $validated['description'] ?? null,
                 'status' => $needsReview ? Status::REVIEW : ($validated['status'] ?? Status::DRAFT),
-                'region' => $validated['region'] ?? null,
+                'region' => (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'],
                 'server_region' => $validated['server_region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
             ]);
@@ -221,7 +221,7 @@ class BlueprintController extends Controller implements HasMiddleware
             }
 
             if (isset($validated['region'])) {
-                $blueprint->region = $validated['region'];
+                $blueprint->region = (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'];
             }
 
             if (isset($validated['server_region'])) {
