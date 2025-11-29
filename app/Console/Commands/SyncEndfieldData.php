@@ -32,7 +32,7 @@ class SyncEndfieldData extends Command
      */
     public function handle(): void
     {
-        $localeStrings = ['en', 'cn', 'jp', 'kr', 'tc'];
+        $localeStrings = ['en', 'cn', 'jp', 'kr', 'tc', 'mx', 'ru'];
         $resources = ['items', 'facilities'];
 
         foreach ($localeStrings as $localeString) {

@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Http::macro('warfarin', function () {
-            return Http::baseUrl('https://api.warfarin.wiki/v1');
+            return Http::baseUrl('https://cbt3-api.warfarin.wiki/v1');
         });
     }
 }

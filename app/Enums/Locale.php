@@ -27,7 +27,7 @@ enum Locale: string
             'ko', 'ko-KR', 'kr' => Locale::KOREAN,
             'tw', 'zh-TW', 'tc' => Locale::TRADITIONAL_CHINESE,
             'zh', 'cn', 'zh-CN' => Locale::SIMPLIFIED_CHINESE,
-            'es', 'es-MX', 'es-ES' => Locale::SPANISH,
+            'es', 'mx', 'es-MX', 'es-ES' => Locale::SPANISH,
             'pt', 'pt-BR' => Locale::PORTUGESE,
             'fr', 'fr-FR' => Locale::FRENCH,
             'de', 'de-DE' => Locale::GERMAN,

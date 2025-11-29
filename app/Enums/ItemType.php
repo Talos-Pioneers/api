@@ -23,6 +23,7 @@ enum ItemType: string
     case CONSUMABLES = 'consumables';
     case CRYSTAL = 'crystal';
     case EMPLOYMENT_CONTRACT = 'employment_contract';
+    case GEAR = 'gear';
 
     public function displayName(): string
     {
@@ -46,6 +47,7 @@ enum ItemType: string
             self::CONSUMABLES => 'Consumables',
             self::CRYSTAL => 'Crystal',
             self::EMPLOYMENT_CONTRACT => 'Employment Contract',
+            self::GEAR => 'Gear',
             default => 'Unknown',
         };
     }
@@ -58,6 +60,7 @@ enum ItemType: string
             self::CONSUMABLES,
             self::CRYSTAL,
             self::WEAPON_MATERIAL,
+            self::GEAR,
         ];
     }
 }
