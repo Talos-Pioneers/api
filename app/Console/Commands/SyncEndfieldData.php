@@ -74,6 +74,17 @@ class SyncEndfieldData extends Command
             }
 
             $slugs = collect($indexData)->pluck('slug')->filter();
+            if ($resource === 'items') {
+                $slugs = collect($indexData)
+                    ->map(function ($item) {
+                        $typeId = $item['type'];
+
+                        return ['slug' => $item['slug'], 'type' => $typeId];
+                    })
+                    ->filter()
+                    ->whereIn('type', ItemType::craftableTypeIds())
+                    ->pluck('slug');
+            }
 
             $this->info("Found {$slugs->count()} {$resource} to sync");
 

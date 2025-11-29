@@ -12,6 +12,7 @@ enum FacilityType: string
     case EXTRA_MACHINE = 'extra_machine';
     case LOGISTIC = 'logistic';
     case SOURCE_MACHINE = 'source_machine';
+    case STORAGE = 'storage';
 
     /**
      * Get the display name for the facility type.
