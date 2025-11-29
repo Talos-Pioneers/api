@@ -28,6 +28,7 @@ enum FacilityType: string
             self::EXTRA_MACHINE => 'Miscellaneous',
             self::LOGISTIC => 'Logistics',
             self::SOURCE_MACHINE => 'Mining',
+            self::STORAGE => 'Storage',
         };
     }
 
