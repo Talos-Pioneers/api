@@ -222,6 +222,8 @@ class BlueprintController extends Controller implements HasMiddleware
 
             if (isset($validated['region'])) {
                 $blueprint->region = (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'];
+            } else {
+                $blueprint->region = null;
             }
 
             if (isset($validated['server_region'])) {
