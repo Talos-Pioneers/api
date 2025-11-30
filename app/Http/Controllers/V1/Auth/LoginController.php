@@ -27,7 +27,7 @@ class LoginController extends Controller
             1,
         );
 
-        Mail::to($user->email)->send(new MagicLinkMail($magicLink->url, 'login'));
+        Mail::to($user->email)->queue(new MagicLinkMail($magicLink->url, 'login'));
 
         return response()->json([
             'message' => __('Please check your email for the magic link.'),
