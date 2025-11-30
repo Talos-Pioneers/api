@@ -21,8 +21,10 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        // TODO: Uncomment this when we VERIFY IT is not breaking cn users
+        // app()->environment() === 'production' ? 'indisposable' : null
         return [
-            'email' => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email', app()->environment() === 'production' ? 'indisposable' : null],
+            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'locale' => ['nullable', 'string'],
         ];
