@@ -51,7 +51,8 @@ class StoreBlueprintRequest extends FormRequest
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
             'gallery' => ['nullable', 'array'],
-            'gallery.*' => ['image', 'max:10240'],
+            'gallery.*' => ['image', 'max:30720'],
+
         ];
     }
 }

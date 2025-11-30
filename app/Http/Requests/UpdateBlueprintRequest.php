@@ -47,7 +47,7 @@ class UpdateBlueprintRequest extends FormRequest
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
             'gallery' => ['nullable', 'array'],
-            'gallery.*' => ['image', 'max:10240'],
+            'gallery.*' => ['image', 'max:30720'],
             'gallery_keep_ids' => ['nullable', 'array'],
             'gallery_keep_ids.*' => ['required', 'integer', 'exists:media,id'],
         ];
