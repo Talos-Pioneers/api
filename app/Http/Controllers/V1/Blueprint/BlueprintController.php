@@ -141,11 +141,13 @@ class BlueprintController extends Controller implements HasMiddleware
 
             // Handle gallery uploads
             if ($request->hasFile('gallery')) {
-                foreach ($request->file('gallery') as $file) {
-                    $blueprint->addMedia($file)
+                foreach ($request->file('gallery') as $index => $file) {
+                    $media = $blueprint->addMedia($file)
                         ->usingName($file->getClientOriginalName())
                         ->usingFileName($file->getClientOriginalName())
                         ->toMediaCollection('gallery');
+                    $media->order_column = $index;
+                    $media->save();
                 }
             }
 
@@ -279,13 +281,52 @@ class BlueprintController extends Controller implements HasMiddleware
                 }
             }
 
-            // Handle gallery uploads
+            // Process gallery order if provided
+            $galleryOrder = $validated['gallery_order'] ?? [];
+            $newImageIndex = 0;
+            $newMediaItems = [];
+
+            // First, upload new images and collect them
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $file) {
-                    $blueprint->addMedia($file)
+                    $mediaItem = $blueprint->addMedia($file)
                         ->usingName($file->getClientOriginalName())
                         ->usingFileName($file->getClientOriginalName())
                         ->toMediaCollection('gallery');
+                    $newMediaItems[] = $mediaItem;
+                }
+            }
+
+            // Now update order for all images based on gallery_order
+            if (! empty($galleryOrder)) {
+                $newImageCounter = 0;
+                foreach ($galleryOrder as $order => $identifier) {
+                    if (str_starts_with($identifier, 'new_') && isset($newMediaItems[$newImageCounter])) {
+                        $newMediaItems[$newImageCounter]->order_column = $order;
+                        $newMediaItems[$newImageCounter]->save();
+                        $newImageCounter++;
+
+                        continue;
+                    }
+
+                    if (! str_starts_with($identifier, 'new_')) {
+                        $mediaId = (int) $identifier;
+                        $existingMedia = $blueprint->getMedia('gallery')->firstWhere('id', $mediaId);
+
+                        if ($existingMedia) {
+                            $existingMedia->order_column = $order;
+                            $existingMedia->save();
+                        }
+                    }
+                }
+            }
+
+            if (empty($galleryOrder) && ! empty($newMediaItems)) {
+                // Fallback: if no order provided, set order for new images based on existing count
+                $existingCount = count($keepIds);
+                foreach ($newMediaItems as $index => $mediaItem) {
+                    $mediaItem->order_column = $existingCount + $index;
+                    $mediaItem->save();
                 }
             }
 

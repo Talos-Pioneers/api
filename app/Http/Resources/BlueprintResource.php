@@ -58,12 +58,13 @@ class BlueprintResource extends JsonResource
                 'slug' => $tag->slug,
                 'type' => $tag->type,
             ]),
-            'gallery' => $this->getMedia('gallery')->map(fn ($media) => [
-                'id' => (string) $media->id,
-                'thumbnail' => $media->getTemporaryUrl(now()->addMinutes(5), 'thumb'),
-                'url' => $media->getTemporaryUrl(now()->addMinutes(5), 'optimized'),
-                'name' => $media->name,
-            ]),
+            'gallery' => $this->getMedia('gallery')
+                ->map(fn ($media) => [
+                    'id' => (string) $media->id,
+                    'thumbnail' => $media->getTemporaryUrl(now()->addMinutes(5), 'thumb'),
+                    'url' => $media->getTemporaryUrl(now()->addMinutes(5), 'optimized'),
+                    'name' => $media->name,
+                ]),
             'likes_count' => $this->whenCounted('likes') ?? $this->likes()->count(),
             'copies_count' => $this->whenCounted('copies') ?? $this->copies()->count(),
             'comments_count' => $this->whenCounted('comments') ?? $this->comments()->count(),
