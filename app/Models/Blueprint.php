@@ -148,9 +148,9 @@ class Blueprint extends Model implements HasMedia
     {
         $this->addMediaConversion('thumb')
             ->format('webp')
-            ->width(346)
-            ->height(220)
-            ->fit(Fit::FillMax, 346, 220)
+            ->width(346 * 2.5)
+            ->height(220 * 2.5)
+            ->fit(Fit::FillMax, 346 * 2.5, 220 * 2.5)
             ->quality(75);
 
         $this->addMediaConversion('optimized')
