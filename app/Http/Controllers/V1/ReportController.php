@@ -38,17 +38,6 @@ class ReportController extends Controller
             ], 429);
         }
 
-        $existingReport = Report::where('user_id', $request->user()?->id)
-            ->where('reportable_type', $reportableType)
-            ->where('reportable_id', $reportableId)
-            ->first();
-
-        if ($existingReport) {
-            return response()->json([
-                'message' => 'You have already reported this item.',
-            ], 422);
-        }
-
         $report = Report::create([
             'user_id' => $request->user()?->id ?? null,
             'reportable_type' => $reportableType,
