@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintRequest;
 use App\Http\Requests\UpdateBlueprintRequest;
 use App\Http\Resources\BlueprintResource;
+use App\Mail\AutoModFlaggedMail;
 use App\Models\Blueprint;
 use App\Models\BlueprintCopy;
 use App\Models\User;
@@ -18,6 +19,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -73,6 +75,7 @@ class BlueprintController extends Controller implements HasMiddleware
 
         // Run content moderation
         $needsReview = false;
+        $moderationResult = null;
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build()
                 ->text($validated['title'] ?? null, 'title')
@@ -82,10 +85,25 @@ class BlueprintController extends Controller implements HasMiddleware
                 $autoMod->images($request->file('gallery'));
             }
 
-            $autoMod->validate();
+            $moderationResult = $autoMod->validate();
 
             if ($autoMod->fails()) {
                 $needsReview = true;
+
+                // Notify all admins about flagged content
+                /** @var User $author */
+                $author = $request->user();
+                $admins = User::role('Admin')->get();
+
+                foreach ($admins as $admin) {
+                    Mail::to($admin)->queue(new AutoModFlaggedMail(
+                        contentType: 'blueprint',
+                        contentTitle: $validated['title'] ?? 'Untitled',
+                        author: $author,
+                        flaggedTexts: $moderationResult['flagged_texts'] ?? [],
+                        flaggedImages: $moderationResult['flagged_images'] ?? [],
+                    ));
+                }
             }
         }
 
@@ -176,6 +194,7 @@ class BlueprintController extends Controller implements HasMiddleware
 
         // Run content moderation on updated fields
         $needsReview = false;
+        $moderationResult = null;
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build();
 
@@ -191,10 +210,25 @@ class BlueprintController extends Controller implements HasMiddleware
                 $autoMod->images($request->file('gallery'));
             }
 
-            $autoMod->validate();
+            $moderationResult = $autoMod->validate();
 
             if ($autoMod->fails()) {
                 $needsReview = true;
+
+                // Notify all admins about flagged content
+                /** @var User $author */
+                $author = $request->user();
+                $admins = User::role('Admin')->get();
+
+                foreach ($admins as $admin) {
+                    Mail::to($admin)->queue(new AutoModFlaggedMail(
+                        contentType: 'blueprint',
+                        contentTitle: $validated['title'] ?? $blueprint->title,
+                        author: $author,
+                        flaggedTexts: $moderationResult['flagged_texts'] ?? [],
+                        flaggedImages: $moderationResult['flagged_images'] ?? [],
+                    ));
+                }
             }
         }
 

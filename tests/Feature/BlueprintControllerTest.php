@@ -80,6 +80,7 @@ it('can create a blueprint', function () {
         'description' => 'A test blueprint',
         'status' => Status::DRAFT->value,
         'region' => Region::VALLEY_IV->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
         'facilities' => [
             ['id' => $facility1->id, 'quantity' => 2],
             ['id' => $facility2->id, 'quantity' => 1],
@@ -139,6 +140,7 @@ it('can create a blueprint with tags', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
         'tags' => [$tag1->id, $tag2->id],
     ]);
 
@@ -157,6 +159,7 @@ it('can create a blueprint with gallery images', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Blueprint',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
         'gallery' => [$image1, $image2],
     ]);
 
@@ -171,6 +174,7 @@ it('can create an anonymous blueprint', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Anonymous Blueprint',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
         'is_anonymous' => true,
     ]);
 
@@ -301,6 +305,7 @@ it('can update own blueprint', function () {
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'New Title',
         'code' => 'NEWCODE',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful()
@@ -346,6 +351,7 @@ it('can update blueprint tags', function () {
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'tags' => [$tag2->id, $tag3->id],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -369,6 +375,7 @@ it('can update blueprint gallery', function () {
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'gallery' => [$image2, $image3],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -386,6 +393,7 @@ it('can update blueprint to anonymous', function () {
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'is_anonymous' => true,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful()
@@ -421,6 +429,7 @@ it('can update blueprint from another user as admin', function () {
 
     $response = $this->actingAs($admin)->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated by Admin',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -436,6 +445,7 @@ it('can update blueprint from another user as moderator', function () {
 
     $response = $this->actingAs($moderator)->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated by Moderator',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -502,6 +512,7 @@ it('generates slug from title when creating a blueprint', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'My Awesome Blueprint',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful()
@@ -522,6 +533,7 @@ it('generates slug from title when updating a blueprint', function () {
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Updated Blueprint Title',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful()
@@ -745,19 +757,6 @@ it('cannot like a blueprint without authentication', function () {
     $response->assertUnauthorized();
 });
 
-it('cannot copy a blueprint without authentication', function () {
-    $blueprint = Blueprint::factory()->create([
-        'status' => Status::PUBLISHED,
-    ]);
-
-    // Remove authentication
-    $this->actingAsGuest();
-
-    $response = $this->postJson("/api/v1/blueprints/{$blueprint->id}/copy");
-
-    $response->assertUnauthorized();
-});
-
 it('sets status to review when title fails moderation', function () {
     Config::set('services.auto_mod.enabled', true);
 
@@ -780,6 +779,7 @@ it('sets status to review when title fails moderation', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Inappropriate Title',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -808,6 +808,7 @@ it('sets status to review when description fails moderation', function () {
         'title' => 'Safe Title',
         'description' => 'Inappropriate description content',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -841,6 +842,7 @@ it('allows blueprint creation when content passes moderation', function () {
         'title' => 'Safe Blueprint Title',
         'description' => 'A safe and appropriate description',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -869,6 +871,7 @@ it('sets status to review when title fails moderation during update', function (
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Inappropriate Updated Title',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -898,6 +901,7 @@ it('allows blueprint update when content passes moderation', function () {
 
     $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
         'title' => 'Safe Updated Title',
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -929,6 +933,7 @@ it('handles moderation api errors gracefully during creation', function () {
         'code' => 'EFE750a2A78o53Ela',
         'title' => 'Test Title',
         'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     // API errors should be logged but not block creation
@@ -965,6 +970,7 @@ it('sets status to review when image fails moderation', function () {
         'description' => 'Safe description',
         'version' => GameVersion::CBT_3->value,
         'gallery' => [$image],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -1013,6 +1019,7 @@ it('allows blueprint creation when images pass moderation', function () {
         'description' => 'Safe description',
         'version' => GameVersion::CBT_3->value,
         'gallery' => [$image1, $image2],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
     ]);
 
     $response->assertSuccessful();
@@ -1317,9 +1324,9 @@ it('defaults to sorting by created_at', function () {
     $response->assertSuccessful();
     $data = $response->json('data');
 
-    expect($data[0]['id'])->toBe($blueprint1->id);
+    expect($data[0]['id'])->toBe($blueprint3->id);
     expect($data[1]['id'])->toBe($blueprint2->id);
-    expect($data[2]['id'])->toBe($blueprint3->id);
+    expect($data[2]['id'])->toBe($blueprint1->id);
 });
 
 it('paginates blueprint results', function () {

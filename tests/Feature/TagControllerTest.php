@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Locale;
 use App\Enums\TagType;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -12,6 +13,7 @@ beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
     $this->user = User::factory()->regularUser()->create();
     $this->actingAs($this->user);
+    app()->setLocale(Locale::ENGLISH->value);
 });
 
 it('can list all tags', function () {
@@ -67,7 +69,7 @@ it('can create a tag as admin', function () {
     ]);
 
     $tag = Tag::where('type', TagType::BLUEPRINT_TAGS->value)
-        ->where('name->en', 'manufacturing')
+        ->where('name->'.Locale::ENGLISH->value, 'manufacturing')
         ->first();
 
     expect($tag)->not->toBeNull();

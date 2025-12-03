@@ -4,8 +4,11 @@ namespace App\Http\Controllers\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReportRequest;
+use App\Mail\ReportMail;
 use App\Models\Report;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ReportController extends Controller
@@ -52,6 +55,11 @@ class ReportController extends Controller
             'reportable_id' => $reportableId,
             'reason' => $validated['reason'] ?? null,
         ]);
+
+        $admins = User::role('Admin')->pluck('email');
+        foreach ($admins as $admin) {
+            Mail::to($admin)->queue(new ReportMail($report));
+        }
 
         return response()->json([
             'message' => 'Report submitted successfully.',
