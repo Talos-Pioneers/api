@@ -37,7 +37,7 @@ class AutoApproveComment
             $commentable = $comment->commentable;
             $contentTitle = method_exists($commentable, 'getTitle')
                 ? $commentable->getTitle()
-                : ($commentable->title ?? 'Comment on ' . class_basename($commentable));
+                : ($commentable->title ?? 'Comment on '.class_basename($commentable));
 
             $admins = User::role('Admin')->get();
 

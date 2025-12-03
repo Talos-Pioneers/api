@@ -40,9 +40,13 @@ Content has been automatically flagged for review by the moderation system.
 
 @endforeach
 @endif
+---
 
-@if(count($flaggedImages) > 0)
+@if (count($flaggedImages) > 0)
 ## Flagged Images
+
+@foreach($flaggedImages as $flaggedImage)
+**Image:** {{ $flaggedImage['image'] }}
 
 **Violated Categories:**
 
@@ -58,8 +62,6 @@ Content has been automatically flagged for review by the moderation system.
 
 @endforeach
 @endif
-
----
 
 This content has been placed in review status and requires manual approval.
 
