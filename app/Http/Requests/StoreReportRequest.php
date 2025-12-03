@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
+use App\Models\Report;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,9 +35,36 @@ class StoreReportRequest extends FormRequest
                 'required',
                 'string',
                 Rule::exists($this->getReportableTable(), 'id'),
+                $this->uniqueReportRule(),
             ],
             'reason' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * Get custom validation rule for preventing duplicate reports.
+     */
+    protected function uniqueReportRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $userId = $this->user()?->id;
+            $reportableType = $this->input('reportable_type');
+            $reportableId = $value;
+            if (! $userId) {
+                return;
+            }
+
+            $exists = Report::where('reportable_type', $reportableType)
+                ->where('reportable_id', $reportableId)
+                ->when($userId, function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
+                ->exists();
+
+            if ($exists) {
+                $fail('You have already reported this item.');
+            }
+        };
     }
 
     /**
