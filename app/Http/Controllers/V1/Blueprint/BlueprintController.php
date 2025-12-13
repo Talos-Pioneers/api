@@ -57,6 +57,8 @@ class BlueprintController extends Controller implements HasMiddleware
                     AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
                     'likes_count',
                     'copies_count',
+                    'width',
+                    'height',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
@@ -122,6 +124,8 @@ class BlueprintController extends Controller implements HasMiddleware
                 'region' => (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'],
                 'server_region' => $validated['server_region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
+                'width' => $validated['width'] ?? null,
+                'height' => $validated['height'] ?? null,
             ]);
 
             // Sync facilities if provided
@@ -268,6 +272,14 @@ class BlueprintController extends Controller implements HasMiddleware
 
             if (isset($validated['is_anonymous'])) {
                 $blueprint->is_anonymous = $validated['is_anonymous'];
+            }
+
+            if (isset($validated['width'])) {
+                $blueprint->width = $validated['width'];
+            }
+
+            if (isset($validated['height'])) {
+                $blueprint->height = $validated['height'];
             }
 
             $blueprint->save();

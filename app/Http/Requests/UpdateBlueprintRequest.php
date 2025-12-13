@@ -52,6 +52,8 @@ class UpdateBlueprintRequest extends FormRequest
             'gallery_keep_ids.*' => ['required', 'integer', 'exists:media,id'],
             'gallery_order' => ['nullable', 'array'],
             'gallery_order.*' => ['required', 'string'],
+            'width' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'height' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
 }
