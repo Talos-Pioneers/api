@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
 
@@ -26,6 +27,22 @@ class RegisterController extends Controller implements HasMiddleware
 
     public function store(RegisterRequest $request): JsonResponse
     {
+        $ip = $request->ip();
+        $rateLimitKey = "register:ip:{$ip}";
+
+        if (! RateLimiter::attempt(
+            $rateLimitKey,
+            5,
+            function () {
+                // No-op: Only for rate limiting
+            },
+            3600 // 1 hour in seconds
+        )) {
+            return response()->json([
+                'message' => __('You can only register 5 times per hour. Please try again later.'),
+            ], 429);
+        }
+
         $locale = $request->validated('locale') ? Locale::fromString($request->validated('locale')) : Locale::ENGLISH;
 
         $user = User::create([
