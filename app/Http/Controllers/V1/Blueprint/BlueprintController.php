@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
@@ -55,10 +56,10 @@ class BlueprintController extends Controller implements HasMiddleware
                     AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
                     AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
                     AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
+                    AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL, 'integer'),
+                    AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL, 'integer'),
                     'likes_count',
                     'copies_count',
-                    'width',
-                    'height',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
