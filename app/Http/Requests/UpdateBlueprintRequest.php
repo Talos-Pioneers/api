@@ -8,6 +8,7 @@ use App\Enums\ServerRegion;
 use App\Enums\Status;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateBlueprintRequest extends FormRequest
 {
@@ -46,7 +47,7 @@ class UpdateBlueprintRequest extends FormRequest
             'is_anonymous' => ['nullable', 'boolean'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
-            'gallery' => ['nullable', 'array'],
+            'gallery' => ['nullable', 'array', 'max:5'],
             'gallery.*' => ['image', 'max:30720'],
             'gallery_keep_ids' => ['nullable', 'array'],
             'gallery_keep_ids.*' => ['required', 'integer', 'exists:media,id'],
@@ -55,5 +56,27 @@ class UpdateBlueprintRequest extends FormRequest
             'width' => ['nullable', 'integer', 'min:1', 'max:50'],
             'height' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $galleryKeepIds = $this->input('gallery_keep_ids', []);
+            $gallery = $this->file('gallery', []);
+
+            $keptCount = is_array($galleryKeepIds) ? count($galleryKeepIds) : 0;
+            $newCount = is_array($gallery) ? count($gallery) : 0;
+            $totalCount = $keptCount + $newCount;
+
+            if ($totalCount > 5) {
+                $validator->errors()->add(
+                    'gallery',
+                    'The total number of images (kept + new) cannot exceed 5. You are trying to keep '.$keptCount.' image(s) and upload '.$newCount.' new image(s), which totals '.$totalCount.' image(s).'
+                );
+            }
+        });
     }
 }
