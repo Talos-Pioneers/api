@@ -85,8 +85,8 @@ it('adds new images with correct order', function () {
     $media = $blueprint->getMedia('gallery');
 
     expect($media)->toHaveCount(2);
-    expect($media[0]->getCustomProperty('order'))->toBe(0);
-    expect($media[1]->getCustomProperty('order'))->toBe(1);
+    expect($media[0]->order_column)->toBe(0);
+    expect($media[1]->order_column)->toBe(1);
 });
 
 it('handles mixed order of existing and new images', function () {
@@ -97,8 +97,13 @@ it('handles mixed order of existing and new images', function () {
     $image1 = UploadedFile::fake()->image('image1.jpg');
     $image2 = UploadedFile::fake()->image('image2.jpg');
 
-    $blueprint->addMedia($image1)->toMediaCollection('gallery')->setCustomProperty('order', 0);
-    $blueprint->addMedia($image2)->toMediaCollection('gallery')->setCustomProperty('order', 1);
+    $media1 = $blueprint->addMedia($image1)->toMediaCollection('gallery');
+    $media1->order_column = 0;
+    $media1->save();
+
+    $media2 = $blueprint->addMedia($image2)->toMediaCollection('gallery');
+    $media2->order_column = 1;
+    $media2->save();
 
     $media = $blueprint->getMedia('gallery');
     $mediaIds = $media->pluck('id')->all();
@@ -131,9 +136,9 @@ it('handles mixed order of existing and new images', function () {
 
     expect($orderedMedia)->toHaveCount(4);
     expect($orderedMedia[0]->id)->toBe($mediaIds[0]);
-    expect($orderedMedia[1]->getCustomProperty('order'))->toBe(1);
+    expect($orderedMedia[1]->order_column)->toBe(1);
     expect($orderedMedia[2]->id)->toBe($mediaIds[1]);
-    expect($orderedMedia[3]->getCustomProperty('order'))->toBe(3);
+    expect($orderedMedia[3]->order_column)->toBe(3);
 });
 
 it('deletes images not in keep list while maintaining order', function () {

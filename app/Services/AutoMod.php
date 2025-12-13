@@ -94,10 +94,12 @@ class AutoMod
     {
         $input = [];
 
-        $input[] = [
-            'type' => 'text',
-            'text' => json_encode(collect($this->texts)->map(fn ($text) => $text['label'].': '.$text['text'])->join("\n")),
-        ];
+        if (! empty($this->texts)) {
+            $input[] = [
+                'type' => 'text',
+                'text' => json_encode(collect($this->texts)->map(fn ($text) => $text['label'].': '.$text['text'])->join("\n")),
+            ];
+        }
 
         // Add image inputs (base64 encoded)
         // TODO: Handle multiple images if supported in the future; for now, only use the first image
@@ -123,7 +125,6 @@ class AutoMod
         $flaggedImages = [];
 
         $input = $this->getInput();
-        info(json_encode($this->texts));
 
         if (empty($input)) {
             $this->passed = true;

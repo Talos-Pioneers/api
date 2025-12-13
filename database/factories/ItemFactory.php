@@ -21,7 +21,7 @@ class ItemFactory extends Factory
         return [
             'slug' => fake()->unique()->slug(),
             'icon' => fake()->word(),
-            'type' => fake()->randomElement(ItemType::cases()),
+            'type' => fake()->randomElement(ItemType::craftableTypes()),
             'output_facility_craft_table' => [],
             'name' => [
                 Locale::ENGLISH->value => fake()->words(2, true),

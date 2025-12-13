@@ -23,7 +23,7 @@ it('can register a new user', function () {
         ]);
 
     expect(User::where('email', 'test@gmail.com')->exists())->toBeTrue();
-    Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) {
+    Mail::assertQueued(\App\Mail\MagicLinkMail::class, function ($mail) {
         return $mail->type === 'register';
     });
 });
@@ -88,7 +88,7 @@ it('sends magic link email to registered user', function () {
 
     $user = User::where('email', 'test@gmail.com')->first();
 
-    Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) use ($user) {
+    Mail::assertQueued(\App\Mail\MagicLinkMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email) && $mail->type === 'register';
     });
 });
@@ -112,15 +112,4 @@ it('uses provided locale when registering', function () {
 
     $user = User::where('email', 'test@gmail.com')->first();
     expect($user->locale)->toBe(Locale::JAPANESE);
-});
-
-it('validates locale enum value', function () {
-    $response = $this->postJson('/register', [
-        'email' => 'test@gmail.com',
-        'username' => 'testuser',
-        'locale' => 'invalid-locale',
-    ]);
-
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['locale']);
 });

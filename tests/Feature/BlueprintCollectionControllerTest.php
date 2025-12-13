@@ -615,11 +615,6 @@ it('rejects collection creation when description fails moderation', function () 
         \OpenAI\Responses\Moderations\CreateResponse::fake([
             'results' => [
                 [
-                    'flagged' => false,
-                    'categories' => [],
-                    'category_scores' => [],
-                ],
-                [
                     'flagged' => true,
                     'categories' => ['harassment' => true],
                     'category_scores' => ['harassment' => 0.9],

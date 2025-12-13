@@ -52,8 +52,8 @@ class BlueprintCollectionController extends Controller
 
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build()
-                ->text($validated['title'] ?? null)
-                ->text($validated['description'] ?? null);
+                ->text($validated['title'] ?? null, 'title')
+                ->text($validated['description'] ?? null, 'description');
 
             $moderationResult = $autoMod->validate();
 
@@ -113,11 +113,11 @@ class BlueprintCollectionController extends Controller
             $autoMod = AutoMod::build();
 
             if (isset($validated['title'])) {
-                $autoMod->text($validated['title']);
+                $autoMod->text($validated['title'], 'title');
             }
 
             if (isset($validated['description'])) {
-                $autoMod->text($validated['description']);
+                $autoMod->text($validated['description'], 'description');
             }
 
             $moderationResult = $autoMod->validate();
