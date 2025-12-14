@@ -61,6 +61,11 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function collections(): HasMany
+    {
+        return $this->hasMany(BlueprintCollection::class, 'creator_id');
+    }
+
     public function providers(): HasMany
     {
         return $this->hasMany(Provider::class);
