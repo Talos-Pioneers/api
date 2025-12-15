@@ -26,6 +26,9 @@ Route::get('blueprints/{blueprint}/comments/{comment}', [BlueprintCommentControl
 
 Route::post('blueprints/{blueprint}/copy', [BlueprintController::class, 'copy']);
 
+// Collection blueprints route (public read access)
+Route::get('collections/{collection}/blueprints', [BlueprintCollectionController::class, 'blueprints']);
+
 // Reports route
 Route::post('reports', [ReportController::class, 'store']);
 
