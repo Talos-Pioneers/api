@@ -3,14 +3,19 @@ nixPkgs = ["...", "python311Packages.supervisor"]
 
 [phases.build]
 cmds = [
-    "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader",
-    "php artisan migrate --force",
     "mkdir -p /etc/supervisor/conf.d/",
     "cp /assets/worker-*.conf /etc/supervisor/conf.d/",
     "cp /assets/supervisord.conf /etc/supervisord.conf",
     "chmod +x /assets/start.sh",
     "..."
 ]
+
+[phases.postbuild]
+cmds = [
+    "php /app/artisan optimize:clear",
+    "php /app/artisan migrate --force",
+]
+dependsOn = ["build"]
 
 [start]
 cmd = '/assets/start.sh'
