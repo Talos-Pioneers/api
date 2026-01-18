@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Blueprint;
 
+use App\Enums\GameVersion;
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintRequest;
@@ -47,6 +48,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
                 ->withCount(['likes', 'copies', 'comments'])
                 ->where('status', Status::PUBLISHED)
+                ->where('version', GameVersion::RELEASE)
                 ->allowedFilters([
                     'region',
                     'server_region',
