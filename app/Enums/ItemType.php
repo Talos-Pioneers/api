@@ -162,11 +162,12 @@ enum ItemType: string
             self::WEAPON_MATERIAL,
             self::GEAR,
             self::ESSENCE_MATERIAL,
+            self::TACTICAL,
         ];
     }
 
     public static function craftableTypeIds(): array
     {
-        return [8, 52, 95, 45, 25, 6, 61, 82];
+        return [8, 52, 95, 45, 25, 6, 61, 82, 48];
     }
 }

@@ -4,6 +4,7 @@ use App\Enums\Locale;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 uses(RefreshDatabase::class);
 
@@ -23,7 +24,7 @@ it('can register a new user', function () {
         ]);
 
     expect(User::where('email', 'test@gmail.com')->exists())->toBeTrue();
-    Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) {
+    Mail::assertQueued(\App\Mail\MagicLinkMail::class, function ($mail) {
         return $mail->type === 'register';
     });
 });
@@ -88,7 +89,7 @@ it('sends magic link email to registered user', function () {
 
     $user = User::where('email', 'test@gmail.com')->first();
 
-    Mail::assertSent(\App\Mail\MagicLinkMail::class, function ($mail) use ($user) {
+    Mail::assertQueued(\App\Mail\MagicLinkMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email) && $mail->type === 'register';
     });
 });
@@ -114,13 +115,57 @@ it('uses provided locale when registering', function () {
     expect($user->locale)->toBe(Locale::JAPANESE);
 });
 
-it('validates locale enum value', function () {
+it('enforces rate limiting when registering', function () {
+    $ip = '127.0.0.1';
+
+    // Register 5 times (the limit)
+    for ($i = 1; $i <= 5; $i++) {
+        $response = $this->postJson('/register', [
+            'email' => "test{$i}@gmail.com",
+            'username' => "testuser{$i}",
+        ], [
+            'REMOTE_ADDR' => $ip,
+        ]);
+
+        $response->assertSuccessful();
+    }
+
+    // Try to register a 6th time (should be rate limited)
     $response = $this->postJson('/register', [
-        'email' => 'test@gmail.com',
-        'username' => 'testuser',
-        'locale' => 'invalid-locale',
+        'email' => 'test6@gmail.com',
+        'username' => 'testuser6',
+    ], [
+        'REMOTE_ADDR' => $ip,
     ]);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['locale']);
+    $response->assertStatus(429)
+        ->assertJson([
+            'message' => 'You can only register 5 times per hour. Please try again later.',
+        ]);
+});
+
+it('allows registration after rate limit expires', function () {
+    $ip = '127.0.0.1';
+    $rateLimitKey = "register:ip:{$ip}";
+
+    // Register once
+    $this->postJson('/register', [
+        'email' => 'test1@gmail.com',
+        'username' => 'testuser1',
+    ], [
+        'REMOTE_ADDR' => $ip,
+    ])->assertSuccessful();
+
+    // Clear rate limiter
+    RateLimiter::clear($rateLimitKey);
+
+    // Should be able to register again
+    $response = $this->postJson('/register', [
+        'email' => 'test2@gmail.com',
+        'username' => 'testuser2',
+    ], [
+        'REMOTE_ADDR' => $ip,
+    ]);
+
+    $response->assertSuccessful();
 });

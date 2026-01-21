@@ -23,7 +23,7 @@ it('can request login magic link', function () {
             'message' => 'Please check your email for the magic link.',
         ]);
 
-    Mail::assertSent(MagicLinkMail::class, function ($mail) use ($user) {
+    Mail::assertQueued(MagicLinkMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email) && $mail->type === 'login';
     });
 });
@@ -60,7 +60,7 @@ it('sends magic link email to user', function () {
         'email' => 'test@gmail.com',
     ]);
 
-    Mail::assertSent(MagicLinkMail::class, function ($mail) use ($user) {
+    Mail::assertQueued(MagicLinkMail::class, function ($mail) use ($user) {
         return $mail->hasTo($user->email) && $mail->type === 'login';
     });
 });

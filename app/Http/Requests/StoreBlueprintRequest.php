@@ -50,9 +50,10 @@ class StoreBlueprintRequest extends FormRequest
             'item_outputs.*.quantity' => ['required', 'integer', 'min:1'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
-            'gallery' => ['nullable', 'array'],
+            'gallery' => ['nullable', 'array', 'max:5'],
             'gallery.*' => ['image', 'max:30720'],
-
+            'width' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'height' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

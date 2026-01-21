@@ -48,6 +48,8 @@ class BlueprintResource extends JsonResource
                 'icon' => $item->icon,
                 'quantity' => $item->pivot->quantity,
             ])),
+            'width' => $this->width,
+            'height' => $this->height,
             'creator' => $this->is_anonymous ? null : [
                 'id' => $this->creator->id,
                 'name' => $this->creator->username,

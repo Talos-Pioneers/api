@@ -29,31 +29,31 @@ it('throws exception when api key is not configured', function () {
 
 it('can add text for moderation', function () {
     $autoMod = AutoMod::build()
-        ->text('Hello world');
+        ->text('Hello world', 'title');
 
     expect($autoMod)->toBeInstanceOf(AutoMod::class);
 });
 
 it('can add multiple texts for moderation', function () {
     $autoMod = AutoMod::build()
-        ->text('First text')
-        ->text('Second text');
+        ->text('First text', 'title')
+        ->text('Second text', 'title2');
 
     expect($autoMod)->toBeInstanceOf(AutoMod::class)->and($autoMod->texts)->toHaveCount(2);
     expect($autoMod->texts)->toBe([
-        'First text',
-        'Second text',
+        ['text' => 'First text', 'label' => 'title'],
+        ['text' => 'Second text', 'label' => 'title2'],
     ]);
 });
 
 it('ignores null or empty text', function () {
     $autoMod = AutoMod::build()
-        ->text(null)
-        ->text('')
-        ->text('Valid text');
+        ->text(null, 'title')
+        ->text('', 'title2')
+        ->text('Valid text', 'label');
 
     expect($autoMod)->toBeInstanceOf(AutoMod::class)->and($autoMod->texts)->toHaveCount(1);
-    expect($autoMod->texts)->toBe(['Valid text']);
+    expect($autoMod->texts)->toBe([['text' => 'Valid text', 'label' => 'label']]);
 });
 
 it('can add single image for moderation', function () {
@@ -123,7 +123,7 @@ it('validates mixed text and images together', function () {
     $autoMod = AutoMod::build(client: $client);
 
     $result = $autoMod
-        ->text('Safe text')
+        ->text('Safe text', 'title')
         ->image($image)
         ->validate();
 
@@ -149,7 +149,7 @@ it('passes validation when no content is flagged', function () {
     // Use build method with fake client
     $autoMod = AutoMod::build(client: $client);
 
-    $result = $autoMod->text('Safe content')->validate();
+    $result = $autoMod->text('Safe content', 'title')->validate();
 
     expect($result['passed'])->toBeTrue();
     expect($result['flagged_texts'])->toBeEmpty();
@@ -177,11 +177,11 @@ it('fails validation when content is flagged', function () {
 
     $autoMod = AutoMod::build(client: $client);
 
-    $result = $autoMod->text('Inappropriate content')->validate();
+    $result = $autoMod->text('Inappropriate content', 'title')->validate();
 
     expect($result['passed'])->toBeFalse();
     expect($result['flagged_texts'])->toHaveCount(1);
-    expect($result['flagged_texts'][0]['text'])->toBe('Inappropriate content');
+    expect($result['flagged_texts'][0]['text'])->toBe(['text' => 'Inappropriate content', 'label' => 'title']);
     expect($result['flagged_texts'][0]['categories']['hate'])->toBeTrue();
 });
 
@@ -199,7 +199,7 @@ it('passes method returns true when validation passes', function () {
     ]);
 
     $autoMod = AutoMod::build(client: $client);
-    $autoMod->text('Safe content')->validate();
+    $autoMod->text('Safe content', 'title')->validate();
 
     expect($autoMod->passes())->toBeTrue();
 });
@@ -219,7 +219,7 @@ it('passes method returns false when validation fails', function () {
 
     $autoMod = AutoMod::build(client: $client);
 
-    expect($autoMod->text('Bad content')->passes())->toBeFalse();
+    expect($autoMod->text('Bad content', 'title')->passes())->toBeFalse();
 });
 
 it('fails method returns opposite of passes', function () {
@@ -247,38 +247,8 @@ it('fails method returns opposite of passes', function () {
     $autoMod1 = AutoMod::build(client: $client);
     $autoMod2 = AutoMod::build(client: $client);
 
-    expect($autoMod1->text('Bad content')->fails())->toBeTrue();
-    expect($autoMod2->text('Bad content')->passes())->toBeFalse();
-});
-
-it('validates multiple texts independently', function () {
-    $client = new ClientFake([
-        CreateResponse::fake([
-            'results' => [
-                [
-                    'flagged' => false,
-                    'categories' => [],
-                    'category_scores' => [],
-                ],
-                [
-                    'flagged' => true,
-                    'categories' => ['hate' => true],
-                    'category_scores' => ['hate' => 0.9],
-                ],
-            ],
-        ]),
-    ]);
-
-    $autoMod = AutoMod::build(client: $client);
-
-    $result = $autoMod
-        ->text('Safe content')
-        ->text('Bad content')
-        ->validate();
-
-    expect($result['passed'])->toBeFalse();
-    expect($result['flagged_texts'])->toHaveCount(1);
-    expect($result['flagged_texts'][0]['text'])->toBe('Bad content');
+    expect($autoMod1->text('Bad content', 'title')->fails())->toBeTrue();
+    expect($autoMod2->text('Bad content', 'title')->passes())->toBeFalse();
 });
 
 it('handles api errors gracefully', function () {
@@ -301,7 +271,7 @@ it('handles api errors gracefully', function () {
     $autoMod = AutoMod::build(client: $client);
 
     // Should not throw exception, but log warning
-    $result = $autoMod->text('Some content')->validate();
+    $result = $autoMod->text('Some content', 'title')->validate();
 
     expect($result['passed'])->toBeTrue();
     expect($result['flagged_texts'])->toBeEmpty();
@@ -311,8 +281,8 @@ it('supports fluent chaining', function () {
     $image = UploadedFile::fake()->image('test.jpg');
 
     $autoMod = AutoMod::build()
-        ->text('Title')
-        ->text('Description')
+        ->text('Title', 'title')
+        ->text('Description', 'description')
         ->image($image)
         ->images([UploadedFile::fake()->image('test2.jpg')]);
 

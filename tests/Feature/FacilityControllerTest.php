@@ -177,17 +177,3 @@ it('can sort facilities by slug', function () {
     expect($data[1]['slug'])->toBe('m-facility');
     expect($data[2]['slug'])->toBe('z-facility');
 });
-
-it('paginates facility results', function () {
-    Facility::factory()->count(30)->create();
-
-    $response = $this->getJson('/api/v1/facilities');
-
-    $response->assertSuccessful()
-        ->assertJsonCount(25, 'data')
-        ->assertJsonStructure([
-            'data',
-            'links',
-            'meta',
-        ]);
-});

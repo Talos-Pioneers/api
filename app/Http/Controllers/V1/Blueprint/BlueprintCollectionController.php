@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintCollectionRequest;
 use App\Http\Requests\UpdateBlueprintCollectionRequest;
 use App\Http\Resources\BlueprintCollectionResource;
+use App\Http\Resources\BlueprintResource;
 use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
 use App\Models\User;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BlueprintCollectionController extends Controller
@@ -52,8 +54,8 @@ class BlueprintCollectionController extends Controller
 
         if (config('services.auto_mod.enabled')) {
             $autoMod = AutoMod::build()
-                ->text($validated['title'] ?? null)
-                ->text($validated['description'] ?? null);
+                ->text($validated['title'] ?? null, 'title')
+                ->text($validated['description'] ?? null, 'description');
 
             $moderationResult = $autoMod->validate();
 
@@ -102,6 +104,43 @@ class BlueprintCollectionController extends Controller
     }
 
     /**
+     * Display blueprints for the specified collection.
+     */
+    public function blueprints(Request $request, BlueprintCollection $collection): AnonymousResourceCollection
+    {
+        Gate::authorize('view', $collection);
+
+        $perPage = min($request->input('per_page', 25), 50);
+
+        return BlueprintResource::collection(
+            QueryBuilder::for(Blueprint::class)
+                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
+                ->withCount(['likes', 'copies', 'comments'])
+                ->where('status', Status::PUBLISHED)
+                ->whereHas('collections', fn ($q) => $q->where('blueprint_collections.id', $collection->id))
+                ->allowedFilters([
+                    'region',
+                    'server_region',
+                    'version',
+                    'is_anonymous',
+                    AllowedFilter::scope('author_id', 'createdById'),
+                    AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
+                    AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
+                    AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
+                    AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
+                    AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
+                    'likes_count',
+                    'copies_count',
+                    AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
+                ])
+                ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
+                ->defaultSort('-created_at')
+                ->paginate($perPage)
+                ->appends(request()->query())
+        );
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(UpdateBlueprintCollectionRequest $request, BlueprintCollection $collection): BlueprintCollectionResource
@@ -113,11 +152,11 @@ class BlueprintCollectionController extends Controller
             $autoMod = AutoMod::build();
 
             if (isset($validated['title'])) {
-                $autoMod->text($validated['title']);
+                $autoMod->text($validated['title'], 'title');
             }
 
             if (isset($validated['description'])) {
-                $autoMod->text($validated['description']);
+                $autoMod->text($validated['description'], 'description');
             }
 
             $moderationResult = $autoMod->validate();

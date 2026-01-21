@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Blueprint;
 
+use App\Enums\GameVersion;
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintRequest;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
 
@@ -46,6 +48,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
                 ->withCount(['likes', 'copies', 'comments'])
                 ->where('status', Status::PUBLISHED)
+                ->where('version', GameVersion::RELEASE)
                 ->allowedFilters([
                     'region',
                     'server_region',
@@ -55,6 +58,8 @@ class BlueprintController extends Controller implements HasMiddleware
                     AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
                     AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
                     AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
+                    AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
+                    AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
                     'likes_count',
                     'copies_count',
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
@@ -122,6 +127,8 @@ class BlueprintController extends Controller implements HasMiddleware
                 'region' => (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'],
                 'server_region' => $validated['server_region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
+                'width' => $validated['width'] ?? null,
+                'height' => $validated['height'] ?? null,
             ]);
 
             // Sync facilities if provided
@@ -268,6 +275,14 @@ class BlueprintController extends Controller implements HasMiddleware
 
             if (isset($validated['is_anonymous'])) {
                 $blueprint->is_anonymous = $validated['is_anonymous'];
+            }
+
+            if (isset($validated['width'])) {
+                $blueprint->width = $validated['width'];
+            }
+
+            if (isset($validated['height'])) {
+                $blueprint->height = $validated['height'];
             }
 
             $blueprint->save();

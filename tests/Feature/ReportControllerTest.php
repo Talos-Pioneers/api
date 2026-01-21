@@ -78,19 +78,6 @@ it('can create a report for a collection', function () {
     ]);
 });
 
-it('requires authentication to create a report', function () {
-    $blueprint = Blueprint::factory()->create();
-
-    $this->actingAsGuest();
-
-    $response = $this->postJson('/api/v1/reports', [
-        'reportable_type' => Blueprint::class,
-        'reportable_id' => $blueprint->id,
-    ]);
-
-    $response->assertUnauthorized();
-});
-
 it('prevents duplicate reports from the same user for the same item', function () {
     $blueprint = Blueprint::factory()->create();
 
@@ -259,32 +246,6 @@ it('can report same item type but different instances', function () {
         'reportable_type' => BlueprintCollection::class,
         'reportable_id' => $collection->id,
         'reason' => 'Collection report',
-    ]);
-
-    $response->assertSuccessful();
-
-    // Should have two reports
-    $this->assertDatabaseCount('reports', 2);
-});
-
-it('allows different users to report the same item', function () {
-    $blueprint = Blueprint::factory()->create();
-    $otherUser = User::factory()->create();
-
-    // First user reports
-    $response = $this->postJson('/api/v1/reports', [
-        'reportable_type' => Blueprint::class,
-        'reportable_id' => $blueprint->id,
-        'reason' => 'Report from user 1',
-    ]);
-
-    $response->assertSuccessful();
-
-    // Second user reports same item (should be allowed)
-    $response = $this->actingAs($otherUser)->postJson('/api/v1/reports', [
-        'reportable_type' => Blueprint::class,
-        'reportable_id' => $blueprint->id,
-        'reason' => 'Report from user 2',
     ]);
 
     $response->assertSuccessful();

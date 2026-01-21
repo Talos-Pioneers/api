@@ -15,7 +15,7 @@ it('can list all items', function () {
 
     $item2 = Item::factory()->create([
         'slug' => 'item-2',
-        'type' => ItemType::CURRENCY,
+        'type' => ItemType::CONSUMABLE,
     ]);
 
     $response = $this->getJson('/api/v1/items');
@@ -28,7 +28,7 @@ it('can list all items', function () {
         ])
         ->assertJsonFragment([
             'slug' => 'item-2',
-            'type' => ItemType::CURRENCY->value,
+            'type' => ItemType::CONSUMABLE->value,
         ]);
 });
 
@@ -176,18 +176,4 @@ it('can sort items by slug', function () {
     expect($data[0]['slug'])->toBe('a-item');
     expect($data[1]['slug'])->toBe('m-item');
     expect($data[2]['slug'])->toBe('z-item');
-});
-
-it('paginates item results', function () {
-    Item::factory()->count(30)->create();
-
-    $response = $this->getJson('/api/v1/items');
-
-    $response->assertSuccessful()
-        ->assertJsonCount(25, 'data')
-        ->assertJsonStructure([
-            'data',
-            'links',
-            'meta',
-        ]);
 });

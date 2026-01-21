@@ -23,11 +23,13 @@ class MyCollectionsController extends Controller
         return BlueprintCollectionResource::collection(
             QueryBuilder::for(BlueprintCollection::class)
                 ->where('creator_id', $user->id)
-                ->with(['creator', 'blueprints'])
+                ->with(['creator'])
+                ->withCount('blueprints')
                 ->allowedFilters([
                     'status',
                     'is_anonymous',
                 ])
+                ->allowedIncludes(['blueprints'])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
                 ->defaultSort('created_at')
                 ->paginate(25)

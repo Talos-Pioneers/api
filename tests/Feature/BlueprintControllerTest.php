@@ -1533,3 +1533,150 @@ it('includes facility and item icons in blueprint response', function () {
         ->assertJsonPath('data.item_inputs.0.icon', 'item-input-icon')
         ->assertJsonPath('data.item_outputs.0.icon', 'item-output-icon');
 });
+
+it('allows creating a blueprint with 5 gallery images', function () {
+    $images = [
+        UploadedFile::fake()->image('image1.jpg'),
+        UploadedFile::fake()->image('image2.jpg'),
+        UploadedFile::fake()->image('image3.jpg'),
+        UploadedFile::fake()->image('image4.jpg'),
+        UploadedFile::fake()->image('image5.jpg'),
+    ];
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test Blueprint',
+        'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+        'gallery' => $images,
+    ]);
+
+    $response->assertSuccessful();
+
+    $blueprint = Blueprint::where('code', 'EFE750a2A78o53Ela')->first();
+    expect($blueprint->getMedia('gallery'))->toHaveCount(5);
+});
+
+it('rejects creating a blueprint with more than 5 gallery images', function () {
+    $images = [
+        UploadedFile::fake()->image('image1.jpg'),
+        UploadedFile::fake()->image('image2.jpg'),
+        UploadedFile::fake()->image('image3.jpg'),
+        UploadedFile::fake()->image('image4.jpg'),
+        UploadedFile::fake()->image('image5.jpg'),
+        UploadedFile::fake()->image('image6.jpg'),
+    ];
+
+    $response = $this->postJson('/api/v1/blueprints', [
+        'code' => 'EFE750a2A78o53Ela',
+        'title' => 'Test Blueprint',
+        'version' => GameVersion::CBT_3->value,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+        'gallery' => $images,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['gallery']);
+});
+
+it('allows updating a blueprint with kept images plus new images totaling 5 or less', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $image1 = UploadedFile::fake()->image('image1.jpg');
+    $image2 = UploadedFile::fake()->image('image2.jpg');
+    $image3 = UploadedFile::fake()->image('image3.jpg');
+
+    $media1 = $blueprint->addMedia($image1)->toMediaCollection('gallery');
+    $media2 = $blueprint->addMedia($image2)->toMediaCollection('gallery');
+    $media3 = $blueprint->addMedia($image3)->toMediaCollection('gallery');
+
+    $newImage1 = UploadedFile::fake()->image('new1.jpg');
+    $newImage2 = UploadedFile::fake()->image('new2.jpg');
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'gallery_keep_ids' => [$media1->id, $media2->id, $media3->id],
+        'gallery' => [$newImage1, $newImage2],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+    ]);
+
+    $response->assertSuccessful();
+
+    $blueprint->refresh();
+    expect($blueprint->getMedia('gallery'))->toHaveCount(5);
+});
+
+it('rejects updating a blueprint when kept images plus new images exceed 5', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $image1 = UploadedFile::fake()->image('image1.jpg');
+    $image2 = UploadedFile::fake()->image('image2.jpg');
+    $image3 = UploadedFile::fake()->image('image3.jpg');
+
+    $media1 = $blueprint->addMedia($image1)->toMediaCollection('gallery');
+    $media2 = $blueprint->addMedia($image2)->toMediaCollection('gallery');
+    $media3 = $blueprint->addMedia($image3)->toMediaCollection('gallery');
+
+    $newImage1 = UploadedFile::fake()->image('new1.jpg');
+    $newImage2 = UploadedFile::fake()->image('new2.jpg');
+    $newImage3 = UploadedFile::fake()->image('new3.jpg');
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'gallery_keep_ids' => [$media1->id, $media2->id, $media3->id],
+        'gallery' => [$newImage1, $newImage2, $newImage3],
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['gallery']);
+});
+
+it('allows updating a blueprint with only new images when total is 5 or less', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $newImages = [
+        UploadedFile::fake()->image('new1.jpg'),
+        UploadedFile::fake()->image('new2.jpg'),
+        UploadedFile::fake()->image('new3.jpg'),
+        UploadedFile::fake()->image('new4.jpg'),
+        UploadedFile::fake()->image('new5.jpg'),
+    ];
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'gallery' => $newImages,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+    ]);
+
+    $response->assertSuccessful();
+
+    $blueprint->refresh();
+    expect($blueprint->getMedia('gallery'))->toHaveCount(5);
+});
+
+it('rejects updating a blueprint with more than 5 new images', function () {
+    $blueprint = Blueprint::factory()->create([
+        'creator_id' => $this->user->id,
+    ]);
+
+    $newImages = [
+        UploadedFile::fake()->image('new1.jpg'),
+        UploadedFile::fake()->image('new2.jpg'),
+        UploadedFile::fake()->image('new3.jpg'),
+        UploadedFile::fake()->image('new4.jpg'),
+        UploadedFile::fake()->image('new5.jpg'),
+        UploadedFile::fake()->image('new6.jpg'),
+    ];
+
+    $response = $this->putJson("/api/v1/blueprints/{$blueprint->id}", [
+        'gallery' => $newImages,
+        'server_region' => ServerRegion::AMERICA_EUROPE->value,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['gallery']);
+});

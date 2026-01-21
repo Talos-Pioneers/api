@@ -40,6 +40,8 @@ class Blueprint extends Model implements HasMedia
         'server_region',
         'code',
         'is_anonymous',
+        'width',
+        'height',
     ];
 
     protected function casts(): array
