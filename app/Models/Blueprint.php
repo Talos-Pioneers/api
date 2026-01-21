@@ -39,6 +39,7 @@ class Blueprint extends Model implements HasMedia
         'region',
         'server_region',
         'code',
+        'partner_url',
         'is_anonymous',
         'width',
         'height',

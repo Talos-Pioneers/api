@@ -118,7 +118,8 @@ class BlueprintController extends Controller implements HasMiddleware
 
             $blueprint = Blueprint::create([
                 'creator_id' => $user->id,
-                'code' => $validated['code'],
+                'code' => $validated['code'] ?? null,
+                'partner_url' => $validated['partner_url'] ?? null,
                 'title' => $validated['title'],
                 'slug' => str($validated['title'])->slug(),
                 'version' => $validated['version'],
@@ -245,8 +246,12 @@ class BlueprintController extends Controller implements HasMiddleware
                 $blueprint->slug = str($validated['title'])->slug();
             }
 
-            if (isset($validated['code'])) {
+            if (array_key_exists('code', $validated)) {
                 $blueprint->code = $validated['code'];
+            }
+
+            if (array_key_exists('partner_url', $validated)) {
+                $blueprint->partner_url = $validated['partner_url'];
             }
 
             if (isset($validated['version'])) {
