@@ -30,7 +30,7 @@ class UpdateBlueprintRequest extends FormRequest
     {
         return [
             'code' => ['nullable', 'string', 'max:255'],
-            'partner_url' => ['nullable', 'string', 'max:500', 'regex:/^https?:\/\/enka\.network\/endfield\/blueprint\/\?id=.+$/'],
+            'partner_url' => ['nullable', 'string', 'max:500', 'regex:/^https?:\/\/enka\.network\/endfield\/aic\/\?id=.+$/'],
             'title' => ['sometimes', 'string', 'max:255'],
             'version' => ['sometimes', Rule::enum(GameVersion::class)],
             'description' => ['nullable', 'string', 'max:2500'],
