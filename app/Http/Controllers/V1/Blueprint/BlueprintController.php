@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
@@ -62,6 +63,9 @@ class BlueprintController extends Controller implements HasMiddleware
                     AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
                     'likes_count',
                     'copies_count',
+                    AllowedFilter::callback('hide_partner_url', function (Builder $query, $value) {
+                        $query->whereNull('partner_url');
+                    }),
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
@@ -118,7 +122,8 @@ class BlueprintController extends Controller implements HasMiddleware
 
             $blueprint = Blueprint::create([
                 'creator_id' => $user->id,
-                'code' => $validated['code'],
+                'code' => $validated['code'] ?? null,
+                'partner_url' => $validated['partner_url'] ?? null,
                 'title' => $validated['title'],
                 'slug' => str($validated['title'])->slug(),
                 'version' => $validated['version'],
@@ -245,8 +250,12 @@ class BlueprintController extends Controller implements HasMiddleware
                 $blueprint->slug = str($validated['title'])->slug();
             }
 
-            if (isset($validated['code'])) {
+            if (array_key_exists('code', $validated)) {
                 $blueprint->code = $validated['code'];
+            }
+
+            if (array_key_exists('partner_url', $validated)) {
+                $blueprint->partner_url = $validated['partner_url'];
             }
 
             if (isset($validated['version'])) {

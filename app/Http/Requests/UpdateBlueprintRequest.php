@@ -6,6 +6,7 @@ use App\Enums\GameVersion;
 use App\Enums\Region;
 use App\Enums\ServerRegion;
 use App\Enums\Status;
+use App\Models\Blueprint;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -28,7 +29,8 @@ class UpdateBlueprintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['sometimes', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:255'],
+            'partner_url' => ['nullable', 'string', 'max:500', 'regex:/^https?:\/\/enka\.network\/endfield\/aic\/\?id=.+$/'],
             'title' => ['sometimes', 'string', 'max:255'],
             'version' => ['sometimes', Rule::enum(GameVersion::class)],
             'description' => ['nullable', 'string', 'max:2500'],
@@ -75,6 +77,24 @@ class UpdateBlueprintRequest extends FormRequest
                 $validator->errors()->add(
                     'gallery',
                     'The total number of images (kept + new) cannot exceed 5. You are trying to keep '.$keptCount.' image(s) and upload '.$newCount.' new image(s), which totals '.$totalCount.' image(s).'
+                );
+            }
+
+            // Validate that either code or partner_url will be present after the update
+            /** @var Blueprint $blueprint */
+            $blueprint = $this->route('blueprint');
+
+            // Determine what code will be after update
+            $codeAfterUpdate = $this->has('code') ? $this->input('code') : $blueprint->code;
+
+            // Determine what partner_url will be after update
+            $partnerUrlAfterUpdate = $this->has('partner_url') ? $this->input('partner_url') : $blueprint->partner_url;
+
+            // At least one must be present
+            if (empty($codeAfterUpdate) && empty($partnerUrlAfterUpdate)) {
+                $validator->errors()->add(
+                    'code',
+                    'Either code or partner URL is required.'
                 );
             }
         });

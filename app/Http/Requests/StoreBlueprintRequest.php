@@ -31,7 +31,8 @@ class StoreBlueprintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'required_without:partner_url', 'string', 'max:255'],
+            'partner_url' => ['nullable', 'required_without:code', 'string', 'max:500', 'regex:/^https?:\/\/enka\.network\/endfield\/aic\/\?id=.+$/'],
             'title' => ['required', 'string', 'max:255'],
             'version' => ['required', Rule::enum(GameVersion::class)],
             'description' => ['nullable', 'string', 'max:2500'],

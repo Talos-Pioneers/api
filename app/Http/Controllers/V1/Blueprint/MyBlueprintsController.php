@@ -8,6 +8,7 @@ use App\Models\Blueprint;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -37,6 +38,9 @@ class MyBlueprintsController extends Controller
                     AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
                     'likes_count',
                     'copies_count',
+                    AllowedFilter::callback('hide_partner_url', function (Builder $query, $value) {
+                        $query->whereNull('partner_url');
+                    }),
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title'])
