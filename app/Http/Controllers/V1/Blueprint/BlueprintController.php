@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
@@ -62,6 +63,9 @@ class BlueprintController extends Controller implements HasMiddleware
                     AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
                     'likes_count',
                     'copies_count',
+                    AllowedFilter::callback('hide_partner_url', function (Builder $query, $value) {
+                        $query->whereNull('partner_url');
+                    }),
                     AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
