@@ -20,6 +20,7 @@ class BlueprintResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
+            'partner_url' => $this->partner_url,
             'title' => $this->title,
             'slug' => $this->slug,
             'version' => $this->version->value,
