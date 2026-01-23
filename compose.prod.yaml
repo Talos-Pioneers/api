@@ -19,13 +19,13 @@ services:
       timeout: 5s
       retries: 3
     # The 'depends_on' attribute with 'condition: service_healthy' ensures that
-    # this service will not start until the 'postgres' service passes its health check.
+    # this service will not start until the 'mysql' service passes its health check.
     # This prevents the application from trying to connect to the database before it's ready.
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
 
-  postgres:
+  mysql:
     image: mysql:latest
     restart: unless-stopped
     ports:
@@ -55,11 +55,46 @@ services:
       timeout: 5s
       retries: 3
 
+    laravel-queue-worker:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - laravel-production
+    ports:
+      - 9002:9002
+    command: php artisan queue:work --queue=default --sleep=3 --tries=3 --max-time=3600
+    restart: always 
+    depends_on:
+        php-fpm:
+          condition: service_started  # Wait for php-fpm to start
+
+  # Scheduler Service
+  laravel-scheduler-worker:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+    working_dir: /var/www
+    ports:
+      - 9001:9001
+    volumes:
+      - ./:/var/www
+    networks:
+      - laravel-production
+    command: php artisan schedule:work
+    restart: always 
+    depends_on:
+        php-fpm:
+          condition: service_started  # Wait for php-fpm to start
+
 networks:
   # Attach the service to the 'laravel' network.
   # -----------------------------------------------------------
   # This custom network allows all services within it to communicate using their service names as hostnames.
-  # For example, 'php-fpm' can connect to 'postgres' by using 'postgres' as the hostname.
+  # For example, 'php-fpm' can connect to 'mysql' by using 'mysql' as the hostname.
   # -----------------------------------------------------------
   laravel-production:
 
