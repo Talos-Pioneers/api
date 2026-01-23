@@ -17,12 +17,13 @@ class ItemController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $items = QueryBuilder::for(Item::class)
-            ->whereIn('type', ItemType::craftableTypes())
-            ->allowedFilters([
-                'slug',
-                AllowedFilter::exact('type'),
-            ])
+        $items = cache()->remember('items_' . app()->getLocale(), now()->addMonth(), function () {
+            return QueryBuilder::for(Item::class)
+                ->whereIn('type', ItemType::craftableTypes())
+                ->allowedFilters([
+                    'slug',
+                    AllowedFilter::exact('type'),
+                ])
             ->allowedSorts(['slug', 'type', 'created_at', 'updated_at'])
             ->defaultSort('slug')
             ->get();

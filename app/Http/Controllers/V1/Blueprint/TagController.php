@@ -18,9 +18,11 @@ class TagController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $tags = Tag::query()
-            ->latest()
-            ->get();
+        $tags = cache()->remember('tags_' . app()->getLocale(), now()->addMonth(), function () {
+            return Tag::query()
+                ->latest()
+                ->get();
+        });
 
         return TagResource::collection($tags);
     }

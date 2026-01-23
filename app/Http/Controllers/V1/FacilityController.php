@@ -16,15 +16,17 @@ class FacilityController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $facilities = QueryBuilder::for(Facility::class)
-            ->whereNotNull('type')
-            ->allowedFilters([
-                'slug',
-                AllowedFilter::exact('type'),
-            ])
-            ->allowedSorts(['slug', 'type', 'created_at', 'updated_at'])
-            ->defaultSort('slug')
-            ->get();
+        $facilities = cache()->remember('facilities_' . app()->getLocale(), now()->addMonth(), function () {
+            return QueryBuilder::for(Facility::class)
+                ->whereNotNull('type')
+                ->allowedFilters([
+                    'slug',
+                    AllowedFilter::exact('type'),
+                ])
+                ->allowedSorts(['slug', 'type', 'created_at', 'updated_at'])
+                ->defaultSort('slug')
+                ->get();
+        });
 
         return FacilityResource::collection($facilities);
     }
