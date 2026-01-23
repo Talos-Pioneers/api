@@ -46,7 +46,7 @@ class BlueprintController extends Controller implements HasMiddleware
 
         return BlueprintResource::collection(
             QueryBuilder::for(Blueprint::class)
-                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
+                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs', 'media'])
                 ->withCount(['likes', 'copies', 'comments'])
                 ->where('status', Status::PUBLISHED)
                 ->where('version', GameVersion::RELEASE)
