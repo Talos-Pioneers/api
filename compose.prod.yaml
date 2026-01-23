@@ -1,0 +1,69 @@
+services:
+  php-fpm:
+    # For the php-fpm service, we will create a custom image to install the necessary PHP extensions and setup proper permissions.
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production
+    restart: unless-stopped
+    volumes:
+      - laravel-public-assets:/var/www/public/build  # Mount built public assets to ensure the manifest.json and hashed files match between Nginx and PHP-FPM
+      - laravel-storage-production:/var/www/storage  # Mount the storage volume
+    env_file:
+      - .env
+    networks:
+      - laravel-production
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    # The 'depends_on' attribute with 'condition: service_healthy' ensures that
+    # this service will not start until the 'postgres' service passes its health check.
+    # This prevents the application from trying to connect to the database before it's ready.
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: mysql:latest
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      - MYSQL_PASS=${MYSQL_PASS:-app}
+      - MYSQL_USER=${MYSQL_USER:-laravel}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-secret}
+    volumes:
+      - talos-pioneers-production:/var/lib/mysql
+    networks:
+      - laravel-production
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped  # Automatically restart unless the service is explicitly stopped
+    networks:
+      - laravel-production
+    # Health check for Redis
+    # -----------------------------------------------------------
+    # Checks if Redis is responding to the 'PING' command.
+    # This ensures that the service is not only running but also operational.
+    # -----------------------------------------------------------
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  # Attach the service to the 'laravel' network.
+  # -----------------------------------------------------------
+  # This custom network allows all services within it to communicate using their service names as hostnames.
+  # For example, 'php-fpm' can connect to 'postgres' by using 'postgres' as the hostname.
+  # -----------------------------------------------------------
+  laravel-production:
+
+volumes:
+  talos-pioneers-production:
+  laravel-storage-production:
+  laravel-public-assets:
