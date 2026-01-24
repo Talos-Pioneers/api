@@ -463,7 +463,7 @@ class BlueprintController extends Controller implements HasMiddleware
                     'copied_at' => now(),
                 ]);
             },
-            86400 // 24 hours in seconds
+            60*60 // 1 hour in seconds
         );
 
         if (! $canCopy) {
