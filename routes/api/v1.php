@@ -15,7 +15,9 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::apiResource('tags', TagController::class)->only(['index']);
-Route::apiResource('blueprints', BlueprintController::class)->only(['index', 'show']);
+Route::apiResource('blueprints', BlueprintController::class)->only(['index', 'show'])
+    ->name('index', 'blueprints.index')
+    ->name('show', 'blueprints.show');
 Route::apiResource('collections', BlueprintCollectionController::class)->only(['index', 'show']);
 Route::apiResource('facilities', FacilityController::class)->only(['index', 'show']);
 Route::apiResource('items', ItemController::class)->only(['index', 'show']);
