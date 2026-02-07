@@ -2,6 +2,8 @@
 
 namespace App\Mail;
 
+use App\Models\Blueprint;
+use App\Models\BlueprintCollection;
 use App\Models\Report;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -37,6 +39,7 @@ class ReportMail extends Mailable
             markdown: 'mail.report-mail',
             with: [
                 'report' => $this->report,
+                'url' => $this->getReportUrl(),
             ],
         );
     }
@@ -49,5 +52,13 @@ class ReportMail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    public function getReportUrl() : string {
+        return match($this->report->reportable_type) {
+            Blueprint::class => config('app.frontend_url') . '/en/blueprints/' . $this->report->reportable_id,
+            BlueprintCollection::class => config('app.frontend_url') . '/en/collections/' . $this->report->reportable_id,
+            default => config('app.frontend_url'),
+        };
     }
 }
