@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class BlueprintResource extends JsonResource
 {
@@ -62,10 +63,10 @@ class BlueprintResource extends JsonResource
                 'type' => $tag->type,
             ]),
             'gallery' => $this->getMedia('gallery')
-                ->map(fn ($media) => [
+                ->map(fn (Media $media) => [
                     'id' => (string) $media->id,
-                    'thumbnail' => $media->getTemporaryUrl(now()->addMinutes(5), 'thumb'),
-                    'url' => $media->getTemporaryUrl(now()->addMinutes(5), 'optimized'),
+                    'thumbnail' => config('app.media_url') .'/'. $media->getPath('thumb'),
+                    'url' => config('app.media_url') .'/'. $media->getPath('optimized'),
                     'name' => $media->name,
                 ]),
             'likes_count' => $this->whenCounted('likes') ?? $this->likes()->count(),
