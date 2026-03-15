@@ -54,6 +54,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+    'media_url' => env('MEDIA_URL', 'http://localhost:3000'),
 
     /*
     |--------------------------------------------------------------------------

@@ -15,6 +15,10 @@ A new report has been submitted.
 
 **Reported By:** {{ $report->user?->username }} ({{ $report->user?->email }})
 
+<x-mail::button :url="$url" color="success">
+View Report
+</x-mail::button>   
+
 Thanks,<br>
 {{ config('app.name') }}
 </x-mail::message>
