@@ -28,14 +28,14 @@ enum Locale: string
             'tw', 'zh-TW', 'tc' => Locale::TRADITIONAL_CHINESE,
             'zh', 'cn', 'zh-CN' => Locale::SIMPLIFIED_CHINESE,
             'es', 'mx', 'es-MX', 'es-ES' => Locale::SPANISH,
-            'pt', 'pt-BR' => Locale::PORTUGESE,
+            'pt', 'pt-BR', 'br' => Locale::PORTUGESE,
             'fr', 'fr-FR' => Locale::FRENCH,
             'de', 'de-DE' => Locale::GERMAN,
             'ru', 'ru-RU' => Locale::RUSSIAN,
             'it', 'it-IT' => Locale::ITALIAN,
             'id', 'id-ID' => Locale::INDONESIAN,
             'th', 'th-TH' => Locale::THAI,
-            'vi', 'vi-VN' => Locale::VIET,
+            'vi', 'vi-VN', 'vn' => Locale::VIET,
             default => null,
         };
     }

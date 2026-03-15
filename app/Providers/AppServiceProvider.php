@@ -16,6 +16,7 @@ use BeyondCode\Comments\Events\CommentAdded;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Tags\Tag;
 
@@ -46,7 +47,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Http::macro('warfarin', function () {
-            return Http::baseUrl('https://cbt3-api.warfarin.wiki/v1');
+            return Http::baseUrl('https://api.warfarin.wiki/v1');
         });
+
+        URL::forceHttps();
     }
 }
