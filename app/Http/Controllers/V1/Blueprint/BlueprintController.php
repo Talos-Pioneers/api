@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1\Blueprint;
 
 use App\Enums\GameVersion;
+use App\Enums\Region;
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBlueprintRequest;
@@ -13,7 +14,9 @@ use App\Models\Blueprint;
 use App\Models\BlueprintCopy;
 use App\Models\User;
 use App\Services\AutoMod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -23,7 +26,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\QueryBuilder\AllowedFilter;
-use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\Enums\FilterOperator;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Tags\Tag;
@@ -70,6 +72,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 ])
                 ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
                 ->defaultSort('-created_at')
+                ->search(request()->query('search'))
                 ->paginate($perPage)
                 ->appends(request()->query())
         );
@@ -129,7 +132,7 @@ class BlueprintController extends Controller implements HasMiddleware
                 'version' => $validated['version'],
                 'description' => $validated['description'] ?? null,
                 'status' => $needsReview ? Status::REVIEW : ($validated['status'] ?? Status::DRAFT),
-                'region' => (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'],
+                'region' => (empty($validated['region']) || $validated['region'] === Region::ANY->value) ? null : $validated['region'],
                 'server_region' => $validated['server_region'] ?? null,
                 'is_anonymous' => $validated['is_anonymous'] ?? false,
                 'width' => $validated['width'] ?? null,
@@ -273,7 +276,7 @@ class BlueprintController extends Controller implements HasMiddleware
             }
 
             if (isset($validated['region'])) {
-                $blueprint->region = (empty($validated['region']) || $validated['region'] === \App\Enums\Region::ANY->value) ? null : $validated['region'];
+                $blueprint->region = (empty($validated['region']) || $validated['region'] === Region::ANY->value) ? null : $validated['region'];
             } else {
                 $blueprint->region = null;
             }
@@ -397,7 +400,7 @@ class BlueprintController extends Controller implements HasMiddleware
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
+    public function destroy(Request $request, Blueprint $blueprint): JsonResponse
     {
         if ($request->user()->cannot('delete', $blueprint)) {
             abort(403, 'You are not authorized to delete this blueprint');
@@ -411,7 +414,7 @@ class BlueprintController extends Controller implements HasMiddleware
     /**
      * Toggle like status for a blueprint.
      */
-    public function like(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
+    public function like(Request $request, Blueprint $blueprint): JsonResponse
     {
         if ($request->user()->cannot('view', $blueprint)) {
             abort(403, 'You are not authorized to like this blueprint');
@@ -441,7 +444,7 @@ class BlueprintController extends Controller implements HasMiddleware
     /**
      * Track a blueprint copy with rate limiting.
      */
-    public function copy(Request $request, Blueprint $blueprint): \Illuminate\Http\JsonResponse
+    public function copy(Request $request, Blueprint $blueprint): JsonResponse
     {
         /** @var User|null $user */
         $user = $request->user();
@@ -463,7 +466,7 @@ class BlueprintController extends Controller implements HasMiddleware
                     'copied_at' => now(),
                 ]);
             },
-            60*60 // 1 hour in seconds
+            60 * 60 // 1 hour in seconds
         );
 
         if (! $canCopy) {

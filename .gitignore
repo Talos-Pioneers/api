@@ -25,3 +25,7 @@ Thumbs.db
 /storage/media-library/temp
 
 .env.staging
+
+data.ms/
+
+meilisearch
