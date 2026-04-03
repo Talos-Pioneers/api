@@ -46,36 +46,49 @@ class BlueprintController extends Controller implements HasMiddleware
     {
         $perPage = min($request->input('per_page', 25), 50);
 
+        $query = null;
+
+        if ($request->has('search')) {
+            $query = Blueprint::search(request()->query('search'))->query(function ($query) {
+                return $this->queryBuilder($query);
+            });
+        } else {
+            $query = $this->queryBuilder(Blueprint::query());
+        }
+
         return BlueprintResource::collection(
-            QueryBuilder::for(Blueprint::class)
-                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs', 'media'])
-                ->withCount(['likes', 'copies', 'comments'])
-                ->where('status', Status::PUBLISHED)
-                ->where('version', GameVersion::RELEASE)
-                ->allowedFilters([
-                    'region',
-                    'server_region',
-                    'version',
-                    'is_anonymous',
-                    AllowedFilter::scope('author_id', 'createdById'),
-                    AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
-                    AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
-                    AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
-                    AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
-                    AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
-                    'likes_count',
-                    'copies_count',
-                    AllowedFilter::callback('hide_partner_url', function (Builder $query, $value) {
-                        $query->whereNull('partner_url');
-                    }),
-                    AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
-                ])
-                ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
-                ->defaultSort('-created_at')
-                ->search(request()->query('search'))
-                ->paginate($perPage)
-                ->appends(request()->query())
+            $query->paginate($perPage)->appends(request()->query())
         );
+    }
+
+    private function queryBuilder($query)
+    {
+        return QueryBuilder::for($query)
+            ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs', 'media'])
+            ->withCount(['likes', 'copies', 'comments'])
+            ->where('status', Status::PUBLISHED)
+            ->where('version', GameVersion::RELEASE)
+            ->allowedFilters([
+                'region',
+                'server_region',
+                'version',
+                'is_anonymous',
+                AllowedFilter::scope('author_id', 'createdById'),
+                AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
+                AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
+                AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
+                AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
+                AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
+                'likes_count',
+                'copies_count',
+                AllowedFilter::callback('hide_partner_url', function (Builder $query, $value) {
+                    $query->whereNull('partner_url');
+                }),
+                AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
+            ])
+            ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
+            ->defaultSort('-created_at');
+
     }
 
     /**
