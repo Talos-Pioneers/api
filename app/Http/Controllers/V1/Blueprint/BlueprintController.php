@@ -48,8 +48,8 @@ class BlueprintController extends Controller implements HasMiddleware
 
         $query = null;
 
-        if ($request->has('search')) {
-            $query = Blueprint::search(request()->query('search'))->query(function ($query) {
+        if ($request->query('filter')['search'] ?? false) {
+            $query = Blueprint::search($request->query('filter')['search'])->query(function ($query) {
                 return $this->queryBuilder($query);
             });
         } else {
