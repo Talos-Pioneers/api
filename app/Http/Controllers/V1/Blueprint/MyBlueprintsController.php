@@ -42,7 +42,7 @@ class MyBlueprintsController extends Controller
         return QueryBuilder::for($query)
             ->where('creator_id', $user->id)
             ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
-            ->withCount(['likes', 'copies'])
+            ->withCount(['likes', 'copies', 'comments'])
             ->allowedFilters([
                 'status',
                 'region',
