@@ -7,6 +7,7 @@ use App\Enums\Region;
 use App\Enums\ServerRegion;
 use App\Enums\Status;
 use BeyondCode\Comments\Traits\HasComments;
+use Database\Factories\BlueprintFactory;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -26,8 +28,8 @@ use Spatie\Tags\HasTags;
 
 class Blueprint extends Model implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\BlueprintFactory> */
-    use HasComments, HasFactory, HasSlug, HasTags, HasUlids, InteractsWithMedia, SoftDeletes;
+    /** @use HasFactory<BlueprintFactory> */
+    use HasComments, HasFactory, HasSlug, HasTags, HasUlids, InteractsWithMedia, Searchable, SoftDeletes;
 
     protected $fillable = [
         'creator_id',
@@ -53,6 +55,15 @@ class Blueprint extends Model implements HasMedia
             'server_region' => ServerRegion::class,
             'version' => GameVersion::class,
             'is_anonymous' => 'boolean',
+        ];
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
         ];
     }
 

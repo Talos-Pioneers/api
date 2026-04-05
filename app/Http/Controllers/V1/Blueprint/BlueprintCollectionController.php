@@ -12,6 +12,7 @@ use App\Models\Blueprint;
 use App\Models\BlueprintCollection;
 use App\Models\User;
 use App\Services\AutoMod;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -112,32 +113,47 @@ class BlueprintCollectionController extends Controller
 
         $perPage = min($request->input('per_page', 25), 50);
 
+        $perPage = min($request->input('per_page', 25), 50);
+
+        $query = null;
+
+        if ($request->query('filter')['search'] ?? false) {
+            $query = Blueprint::search($request->query('filter')['search'])->query(function ($query) use ($collection) {
+                return $this->queryBuilder($query, $collection);
+            });
+        } else {
+            $query = $this->queryBuilder(Blueprint::query(), $collection);
+        }
+
         return BlueprintResource::collection(
-            QueryBuilder::for(Blueprint::class)
-                ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
-                ->withCount(['likes', 'copies', 'comments'])
-                ->where('status', Status::PUBLISHED)
-                ->whereHas('collections', fn ($q) => $q->where('blueprint_collections.id', $collection->id))
-                ->allowedFilters([
-                    'region',
-                    'server_region',
-                    'version',
-                    'is_anonymous',
-                    AllowedFilter::scope('author_id', 'createdById'),
-                    AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
-                    AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
-                    AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
-                    AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
-                    AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
-                    'likes_count',
-                    'copies_count',
-                    AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
-                ])
-                ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
-                ->defaultSort('-created_at')
-                ->paginate($perPage)
-                ->appends(request()->query())
+            $query->paginate($perPage)->appends(request()->query())
         );
+    }
+
+    private function queryBuilder($query, $collection)
+    {
+        return QueryBuilder::for($query)
+            ->with(['creator', 'tags', 'facilities', 'itemInputs', 'itemOutputs'])
+            ->withCount(['likes', 'copies', 'comments'])
+            ->where('status', Status::PUBLISHED)
+            ->whereHas('collections', fn ($q) => $q->where('blueprint_collections.id', $collection->id))
+            ->allowedFilters([
+                'region',
+                'server_region',
+                'version',
+                'is_anonymous',
+                AllowedFilter::scope('author_id', 'createdById'),
+                AllowedFilter::scope('facility', 'withFacilitySlug', arrayValueDelimiter: ','),
+                AllowedFilter::scope('item_input', 'withItemInputSlug', arrayValueDelimiter: ','),
+                AllowedFilter::scope('item_output', 'withItemOutputSlug', arrayValueDelimiter: ','),
+                AllowedFilter::operator('width', FilterOperator::LESS_THAN_OR_EQUAL),
+                AllowedFilter::operator('height', FilterOperator::LESS_THAN_OR_EQUAL),
+                'likes_count',
+                'copies_count',
+                AllowedFilter::exact('tags.id', arrayValueDelimiter: ','),
+            ])
+            ->allowedSorts(['created_at', 'updated_at', 'title', 'likes_count', 'copies_count'])
+            ->defaultSort('-created_at');
     }
 
     /**
@@ -205,7 +221,7 @@ class BlueprintCollectionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, BlueprintCollection $collection): \Illuminate\Http\JsonResponse
+    public function destroy(Request $request, BlueprintCollection $collection): JsonResponse
     {
         Gate::authorize('delete', $collection);
 
