@@ -1,5 +1,5 @@
 [phases.setup]
-nixpkgsArchive = "02c087f3fe673c9e317f206a627cb6b910336dbe"
+nixpkgsArchive = "24e679d1b55c39fa88b3d58974790ea449f8fff5"
 nixLibs = ["libmysqlclient"]
 nixPkgs = [
   "(php85.withExtensions (pe: pe.enabled ++ []))",
