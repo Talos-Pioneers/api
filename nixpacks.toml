@@ -1,5 +1,15 @@
 [phases.setup]
-nixPkgs = ["...", "python311Packages.supervisor"]
+nixpkgsArchive = "02c087f3fe673c9e317f206a627cb6b910336dbe"
+nixLibs = ["libmysqlclient"]
+nixPkgs = [
+  "(php85.withExtensions (pe: pe.enabled ++ []))",
+  "nginx",
+  "libmysqlclient",
+  "php85Packages.composer",
+  "nodejs_22",
+  "npm-9_x",
+  "python311Packages.supervisor",
+]
 
 [phases.build]
 cmds = [
@@ -9,6 +19,13 @@ cmds = [
     "chmod +x /assets/start.sh",
     "..."
 ]
+
+[phases.postbuild]
+cmds = [
+    "php /app/artisan optimize:clear",
+    "php /app/artisan migrate --force",
+]
+dependsOn = ["build"]
 
 [start]
 cmd = '/assets/start.sh'
